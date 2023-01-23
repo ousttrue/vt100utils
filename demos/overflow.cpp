@@ -87,7 +87,7 @@ grow()
 void
 stop()
 {
-  ui_free(&u);
+  u.ui_free();
   vt100_free(head);
   exit(0);
 }
@@ -97,7 +97,7 @@ main(void)
 {
   head = vt100_decode("\x1b[31mLorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \x1b[32mUt enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. \x1b[33mDuis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. \x1b[34mExcepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.");
 
-  ui_new(0, &u);
+  u.ui_new(0);
 
   ui_key("\x1b[C", grow, &u);
   ui_key("\x1b[D", shrink, &u);

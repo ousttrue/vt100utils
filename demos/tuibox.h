@@ -94,6 +94,73 @@ struct ui_t {
   vec_evt_t e;
   int mouse, screen, scroll, canscroll, id, force;
 
+  /*
+   * Initializes a new UI struct,
+   *   puts the terminal into raw
+   *   mode, and prints out the
+   *   necessary escape codes
+   *   for mouse support.
+   */
+  void ui_new(int s) {
+    struct termios raw;
+
+    ioctl(STDOUT_FILENO, TIOCGWINSZ, &(this->ws));
+
+    tcgetattr(STDIN_FILENO, &(this->tio));
+    raw = this->tio;
+    raw.c_lflag &= ~(ECHO | ICANON);
+    tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw);
+
+    vec_init(&(this->b));
+    vec_init(&(this->e));
+
+    printf(
+        "\x1b[?1049h\x1b[0m\x1b[2J\x1b[?1003h\x1b[?1015h\x1b[?1006h\x1b[?25l");
+
+    this->mouse = 0;
+
+    this->screen = s;
+    this->scroll = 0;
+    this->canscroll = 1;
+
+    this->id = 0;
+
+    this->force = 0;
+  }
+
+  /*
+   * Frees the given UI struct,
+   *   and takes the terminal
+   *   out of raw mode.
+   */
+  void ui_free() {
+    ui_box_t *val;
+    ui_evt_t *evt;
+    int i;
+    char *term;
+
+    printf(
+        "\x1b[0m\x1b[2J\x1b[?1049l\x1b[?1003l\x1b[?1015l\x1b[?1006l\x1b[?25h");
+    tcsetattr(STDIN_FILENO, TCSAFLUSH, &(this->tio));
+
+    vec_foreach(&(this->b), val, i) {
+      free(val->cache);
+      free(val);
+    }
+    vec_deinit(&(this->b));
+
+    vec_foreach(&(this->e), evt, i) { free(evt); }
+    vec_deinit(&(this->e));
+
+    term = getenv("TERM");
+    if (strncmp(term, "screen", 6) == 0 || strncmp(term, "tmux", 4) == 0) {
+      printf(
+          "Note: Terminal multiplexer detected.\n  For best performance (i.e. "
+          "reduced flickering), running natively inside\n  a GPU-accelerated "
+          "terminal such as alacritty or kitty is recommended.\n");
+    }
+  }
+
   int CURSOR_Y(ui_box_t *b, int n) {
     return (b->y + (n + 1) + (canscroll ? scroll : 0));
   }
@@ -161,70 +228,6 @@ struct ui_t {
 /* =========================== */
 
 /*
- * Initializes a new UI struct,
- *   puts the terminal into raw
- *   mode, and prints out the
- *   necessary escape codes
- *   for mouse support.
- */
-inline void ui_new(int s, ui_t *u) {
-  struct termios raw;
-
-  ioctl(STDOUT_FILENO, TIOCGWINSZ, &(u->ws));
-
-  tcgetattr(STDIN_FILENO, &(u->tio));
-  raw = u->tio;
-  raw.c_lflag &= ~(ECHO | ICANON);
-  tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw);
-
-  vec_init(&(u->b));
-  vec_init(&(u->e));
-
-  printf("\x1b[?1049h\x1b[0m\x1b[2J\x1b[?1003h\x1b[?1015h\x1b[?1006h\x1b[?25l");
-
-  u->mouse = 0;
-
-  u->screen = s;
-  u->scroll = 0;
-  u->canscroll = 1;
-
-  u->id = 0;
-
-  u->force = 0;
-}
-
-/*
- * Frees the given UI struct,
- *   and takes the terminal
- *   out of raw mode.
- */
-inline void ui_free(ui_t *u) {
-  ui_box_t *val;
-  ui_evt_t *evt;
-  int i;
-  char *term;
-
-  printf("\x1b[0m\x1b[2J\x1b[?1049l\x1b[?1003l\x1b[?1015l\x1b[?1006l\x1b[?25h");
-  tcsetattr(STDIN_FILENO, TCSAFLUSH, &(u->tio));
-
-  vec_foreach(&(u->b), val, i) {
-    free(val->cache);
-    free(val);
-  }
-  vec_deinit(&(u->b));
-
-  vec_foreach(&(u->e), evt, i) { free(evt); }
-  vec_deinit(&(u->e));
-
-  term = getenv("TERM");
-  if (strncmp(term, "screen", 6) == 0 || strncmp(term, "tmux", 4) == 0) {
-    printf("Note: Terminal multiplexer detected.\n  For best performance (i.e. "
-           "reduced flickering), running natively inside\n  a GPU-accelerated "
-           "terminal such as alacritty or kitty is recommended.\n");
-  }
-}
-
-/*
  * Adds a new box to the UI.
  *
  * This function is very simple in
@@ -288,8 +291,8 @@ inline void ui_key(const char *c, func f, ui_t *u) {
 inline void ui_clear(ui_t *u) {
   int tmp = u->screen;
 
-  ui_free(u);
-  ui_new(tmp, u);
+  u->ui_free();
+  u->ui_new(tmp);
 }
 
 /*

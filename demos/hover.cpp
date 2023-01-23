@@ -66,7 +66,7 @@ hover(ui_box_t *b, int x, int y, int down)
 void
 stop()
 {
-  ui_free(&u);
+  u.ui_free();
   vt100_free(head);
   exit(0);
 }
@@ -76,7 +76,7 @@ main(void)
 {
   head = vt100_decode("\x1b[36mClick to see \x1b[4;38;5;125mt\x1b[38;5;127mh\x1b[38;5;130mi\x1b[38;5;135ms \x1b[38;5;140mt\x1b[38;5;145me\x1b[38;5;150mx\x1b[38;5;155mt\x1b[0;36m un-truncate!");
 
-  ui_new(0, &u);
+  u.ui_new(0);
 
   ui_add(
     UI_CENTER_X, UI_CENTER_Y,
