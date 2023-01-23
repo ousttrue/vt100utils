@@ -16,15 +16,6 @@
 const int UI_CENTER_X = -1;
 const int UI_CENTER_Y = -1;
 
-/* The argument isn't actually necessary here, but it helps with design
- * consistency */
-#define ui_loop(u)                                                             \
-  char buf[64];                                                                \
-  int n;                                                                       \
-  while ((n = read(STDIN_FILENO, buf, sizeof(buf))) > 0)
-
-#define ui_update(u) u._ui_update(buf, n)
-
 /*
  * TYPES
  */
@@ -47,7 +38,8 @@ struct ui_box_t {
   void *data2;
 
   bool box_contains(int x, int y) const {
-    return x >= this->x && x <= this->x + this->w && y >= this->y && y <= this->y + this->h;
+    return x >= this->x && x <= this->x + this->w && y >= this->y &&
+           y <= this->y + this->h;
   }
 };
 
@@ -141,6 +133,9 @@ public:
    */
   void ui_clear();
 
+  void ui_mainloop();
+
+private:
   /*
    * Handles mouse and keyboard
    *   events, given a read()

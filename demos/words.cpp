@@ -71,10 +71,9 @@ int main(void) {
   }
 
   u.ui_key("q", stop);
-
   u.ui_draw();
 
-  ui_loop(&u) { ui_update(u); }
+  u.ui_mainloop();
 
   return 0;
 }

@@ -274,3 +274,10 @@ void ui_t::_ui_update(char *c, int n) {
       evt->f();
   }
 }
+
+void ui_t::ui_mainloop() {
+  char buf[64];
+  while (int n = read(STDIN_FILENO, buf, sizeof(buf))) {
+    this->_ui_update(buf, n);
+  }
+}

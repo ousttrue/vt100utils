@@ -105,9 +105,7 @@ main(void)
 
   draw();
 
-  ui_loop(&u) {
-    ui_update(u);
-  }
+  u.ui_mainloop();
 
   return 0;
 }
