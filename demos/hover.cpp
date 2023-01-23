@@ -44,7 +44,7 @@ click(ui_box_t *b, int x, int y, int)
 {
   while (w < 50) {
     w++;
-    ui_draw(&u);
+    u.ui_draw();
     usleep(10000);
   }
 }
@@ -57,7 +57,7 @@ hover(ui_box_t *b, int x, int y, int down)
   } else {
     while (w > 12) {
       w--;
-      ui_draw(&u);
+      u.ui_draw();
       usleep(10000);
     }
   }
@@ -93,7 +93,7 @@ main(void)
 
   ui_key("q", stop, &u);
 
-  ui_draw(&u);
+  u.ui_draw();
 
   ui_loop(&u) {
     ui_update(&u);

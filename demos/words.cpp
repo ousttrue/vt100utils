@@ -27,7 +27,7 @@ click(ui_box_t *b, int x, int y, int)
   node->fg.value += 10;
   if (node->fg.value > 255)
     node->fg.value = 10;
-  ui_draw(&u);
+  u.ui_draw();
 }
 
 void
@@ -77,7 +77,7 @@ main(void)
 
   ui_key("q", stop, &u);
 
-  ui_draw(&u);
+  u.ui_draw();
 
   ui_loop(&u) {
     ui_update(&u);

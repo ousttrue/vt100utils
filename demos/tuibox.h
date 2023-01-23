@@ -133,6 +133,29 @@ struct ui_t {
     if (flush)
       fflush(stdout);
   }
+
+  /*
+   * Draws all boxes to the screen.
+   */
+  void ui_draw() {
+    ui_box_t *tmp;
+    int i;
+
+    printf("\x1b[0m\x1b[2J");
+
+    vec_foreach(&(this->b), tmp, i) { this->ui_draw_one(tmp, 0); }
+    fflush(stdout);
+    this->force = 0;
+  }
+
+  /*
+   * Forces a redraw of the screen,
+   *   updating all boxes' caches.
+   */
+  void ui_redraw() {
+    this->force = 1;
+    ui_draw();
+  }
 };
 
 /* =========================== */
@@ -270,29 +293,6 @@ inline void ui_clear(ui_t *u) {
 }
 
 /*
- * Draws all boxes to the screen.
- */
-inline void ui_draw(ui_t *u) {
-  ui_box_t *tmp;
-  int i;
-
-  printf("\x1b[0m\x1b[2J");
-
-  vec_foreach(&(u->b), tmp, i) { u->ui_draw_one(tmp, 0); }
-  fflush(stdout);
-  u->force = 0;
-}
-
-/*
- * Forces a redraw of the screen,
- *   updating all boxes' caches.
- */
-inline void ui_redraw(ui_t *u) {
-  u->force = 1;
-  ui_draw(u);
-}
-
-/*
  * Handles mouse and keyboard
  *   events, given a read()
  *   buffer.
@@ -330,7 +330,7 @@ inline void _ui_update(char *c, int n, ui_t *u) {
       if (u->canscroll) {
         u->scroll += (4 * (tok[1] == '4')) - 2;
         printf("\x1b[0m\x1b[2J");
-        ui_draw(u);
+        u->ui_draw();
       }
       break;
     }
