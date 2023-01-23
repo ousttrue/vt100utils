@@ -25,9 +25,6 @@
   u->screen = s;                                                               \
   u->force = 1
 
-#define ui_center_x(w, u) (((u)->ws.ws_col - w) / 2)
-#define ui_center_y(h, u) (((u)->ws.ws_row - h) / 2)
-
 #define UI_CENTER_X -1
 #define UI_CENTER_Y -1
 
@@ -80,6 +77,9 @@ class ui_t {
 
 public:
   struct winsize ws;
+
+  int ui_center_x(int w) const { return (this->ws.ws_col - w) / 2; }
+  int ui_center_y(int h) const { return (this->ws.ws_row - h) / 2; }
 
   /*
    * Initializes a new UI struct,

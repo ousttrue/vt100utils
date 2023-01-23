@@ -100,8 +100,8 @@ int ui_t::ui_add(int x, int y, int w, int h, int screen, char *watch,
 
   b->id = this->id++;
 
-  b->x = (x == UI_CENTER_X ? ui_center_x(w, this) : x);
-  b->y = (y == UI_CENTER_Y ? ui_center_y(h, this) : y);
+  b->x = (x == UI_CENTER_X ? this->ui_center_x(w) : x);
+  b->y = (y == UI_CENTER_Y ? this->ui_center_y(h) : y);
   b->w = w;
   b->h = h;
 
