@@ -78,7 +78,7 @@ main(void)
 
   u.ui_new(0);
 
-  ui_add(
+  u.ui_add(
     UI_CENTER_X, UI_CENTER_Y,
     35, 1,
     0,
@@ -87,8 +87,7 @@ main(void)
     click,
     hover,
     NULL,
-    NULL,
-    &u
+    NULL
   );
 
   ui_key("q", stop, &u);

@@ -161,6 +161,63 @@ struct ui_t {
     }
   }
 
+  /*
+   * Adds a new box to the UI.
+   *
+   * This function is very simple in
+   *   nature, but the variety of
+   *   properties associated with
+   *   an individual box makes it
+   *   intimidating to look at.
+   * TODO: Find some way to
+   *   strip this down.
+   */
+  int ui_add(int x, int y, int w, int h, int screen, char *watch, char initial,
+             draw_func draw, loop_func onclick, loop_func onhover, void *data1,
+             void *data2) {
+    char *buf = (char *)malloc(MAXCACHESIZE);
+
+    auto b = (ui_box_t *)malloc(sizeof(ui_box_t));
+
+    b->id = this->id++;
+
+    b->x = (x == UI_CENTER_X ? ui_center_x(w, this) : x);
+    b->y = (y == UI_CENTER_Y ? ui_center_y(h, this) : y);
+    b->w = w;
+    b->h = h;
+
+    b->screen = this->screen;
+
+    b->watch = watch;
+    b->last = initial;
+
+    b->draw = draw;
+    b->onclick = onclick;
+    b->onhover = onhover;
+
+    b->data1 = data1;
+    b->data2 = data2;
+
+    draw(b, buf);
+    b->cache = (char *)realloc(buf, strlen(buf) * 2);
+
+    vec_push(&(this->b), b);
+
+    return b->id;
+  }
+  /*
+   * HELPERS
+   */
+  static void _ui_text(ui_box_t *b, char *out) {
+    sprintf(out, "%s", (char *)b->data1);
+  }
+
+  int ui_text(int x, int y, char *str, int screen, loop_func click,
+              loop_func hover) {
+    return this->ui_add(x, y, strlen(str), 1, screen, NULL, 0, _ui_text, click,
+                        hover, str, NULL);
+  }
+
   int CURSOR_Y(ui_box_t *b, int n) {
     return (b->y + (n + 1) + (canscroll ? scroll : 0));
   }
@@ -226,51 +283,6 @@ struct ui_t {
 };
 
 /* =========================== */
-
-/*
- * Adds a new box to the UI.
- *
- * This function is very simple in
- *   nature, but the variety of
- *   properties associated with
- *   an individual box makes it
- *   intimidating to look at.
- * TODO: Find some way to
- *   strip this down.
- */
-inline int ui_add(int x, int y, int w, int h, int screen, char *watch,
-                  char initial, draw_func draw, loop_func onclick,
-                  loop_func onhover, void *data1, void *data2, ui_t *u) {
-  char *buf = (char *)malloc(MAXCACHESIZE);
-
-  auto b = (ui_box_t *)malloc(sizeof(ui_box_t));
-
-  b->id = u->id++;
-
-  b->x = (x == UI_CENTER_X ? ui_center_x(w, u) : x);
-  b->y = (y == UI_CENTER_Y ? ui_center_y(h, u) : y);
-  b->w = w;
-  b->h = h;
-
-  b->screen = u->screen;
-
-  b->watch = watch;
-  b->last = initial;
-
-  b->draw = draw;
-  b->onclick = onclick;
-  b->onhover = onhover;
-
-  b->data1 = data1;
-  b->data2 = data2;
-
-  draw(b, buf);
-  b->cache = (char *)realloc(buf, strlen(buf) * 2);
-
-  vec_push(&(u->b), b);
-
-  return b->id;
-}
 
 /*
  * Adds a new key event listener
@@ -343,19 +355,6 @@ inline void _ui_update(char *c, int n, ui_t *u) {
     if (strncmp(c, evt->c, strlen(evt->c)) == 0)
       evt->f();
   }
-}
-
-/*
- * HELPERS
- */
-inline void _ui_text(ui_box_t *b, char *out) {
-  sprintf(out, "%s", (char *)b->data1);
-}
-
-inline int ui_text(int x, int y, char *str, int screen, loop_func click,
-                   loop_func hover, ui_t *u) {
-  return ui_add(x, y, strlen(str), 1, screen, NULL, 0, _ui_text, click, hover,
-                str, NULL, u);
 }
 
 #endif

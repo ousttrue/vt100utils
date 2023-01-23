@@ -55,7 +55,7 @@ main(void)
 
   tmp = head->next;
   while (tmp != NULL) {
-    ui_add(
+    u.ui_add(
       x, y,
       tmp->len, 1,
       0,
@@ -64,8 +64,7 @@ main(void)
       click,
       NULL,
       tmp,
-      NULL,
-      &u
+      NULL
     );
     x += tmp->len;
     if (x > (u.ws.ws_col + 50) / 2) {
