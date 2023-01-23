@@ -5,20 +5,18 @@
 #ifndef TUIBOX_H
 #define TUIBOX_H
 
+#include "vec.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/ioctl.h>
 #include <termios.h>
 #include <unistd.h>
-#include "vec.h"
 
 /*
  * PREPROCESSOR
  */
 #define MAXCACHESIZE 65535
-
-#define CURSOR_Y(b) (b->y + (n + 1) + (u->canscroll ? u->scroll : 0))
 
 #define box_contains(x, y, b)                                                  \
   (x >= b->x && x <= b->x + b->w && y >= b->y && y <= b->y + b->h)
@@ -95,6 +93,46 @@ struct ui_t {
   vec_box_t b;
   vec_evt_t e;
   int mouse, screen, scroll, canscroll, id, force;
+
+  int CURSOR_Y(ui_box_t *b, int n) {
+    return (b->y + (n + 1) + (canscroll ? scroll : 0));
+  }
+
+  /*
+   * Draws a single box to the
+   *   screen.
+   */
+  inline void ui_draw_one(ui_box_t *tmp, int flush) {
+    char *buf, *tok;
+    int n = -1;
+
+    if (tmp->screen != this->screen)
+      return;
+
+    buf = (char *)calloc(1, strlen(tmp->cache) * 2);
+    if (this->force || tmp->watch == NULL || *(tmp->watch) != tmp->last) {
+      tmp->draw(tmp, buf);
+      if (tmp->watch != NULL)
+        tmp->last = *(tmp->watch);
+      strcpy(tmp->cache, buf);
+    } else {
+      /* buf is allocated proportionally to tmp->cache, so strcpy is safe */
+      strcpy(buf, tmp->cache);
+    }
+    tok = strtok(buf, "\n");
+    while (tok != NULL) {
+      if (tmp->x > 0 && tmp->x < this->ws.ws_col && CURSOR_Y(tmp, n) > 0 &&
+          CURSOR_Y(tmp, n) < this->ws.ws_row) {
+        printf("\x1b[%i;%iH%s", CURSOR_Y(tmp, n), tmp->x, tok);
+        n++;
+      }
+      tok = strtok(NULL, "\n");
+    }
+    free(buf);
+
+    if (flush)
+      fflush(stdout);
+  }
 };
 
 /* =========================== */
@@ -174,9 +212,9 @@ inline void ui_free(ui_t *u) {
  * TODO: Find some way to
  *   strip this down.
  */
-inline int ui_add(int x, int y, int w, int h, int screen, char *watch, char initial,
-           draw_func draw, loop_func onclick, loop_func onhover, void *data1,
-           void *data2, ui_t *u) {
+inline int ui_add(int x, int y, int w, int h, int screen, char *watch,
+                  char initial, draw_func draw, loop_func onclick,
+                  loop_func onhover, void *data1, void *data2, ui_t *u) {
   char *buf = (char *)malloc(MAXCACHESIZE);
 
   auto b = (ui_box_t *)malloc(sizeof(ui_box_t));
@@ -232,42 +270,6 @@ inline void ui_clear(ui_t *u) {
 }
 
 /*
- * Draws a single box to the
- *   screen.
- */
-inline void ui_draw_one(ui_box_t *tmp, int flush, ui_t *u) {
-  char *buf, *tok;
-  int n = -1;
-
-  if (tmp->screen != u->screen)
-    return;
-
-  buf = (char *)calloc(1, strlen(tmp->cache) * 2);
-  if (u->force || tmp->watch == NULL || *(tmp->watch) != tmp->last) {
-    tmp->draw(tmp, buf);
-    if (tmp->watch != NULL)
-      tmp->last = *(tmp->watch);
-    strcpy(tmp->cache, buf);
-  } else {
-    /* buf is allocated proportionally to tmp->cache, so strcpy is safe */
-    strcpy(buf, tmp->cache);
-  }
-  tok = strtok(buf, "\n");
-  while (tok != NULL) {
-    if (tmp->x > 0 && tmp->x < u->ws.ws_col && CURSOR_Y(tmp) > 0 &&
-        CURSOR_Y(tmp) < u->ws.ws_row) {
-      printf("\x1b[%i;%iH%s", CURSOR_Y(tmp), tmp->x, tok);
-      n++;
-    }
-    tok = strtok(NULL, "\n");
-  }
-  free(buf);
-
-  if (flush)
-    fflush(stdout);
-}
-
-/*
  * Draws all boxes to the screen.
  */
 inline void ui_draw(ui_t *u) {
@@ -276,7 +278,7 @@ inline void ui_draw(ui_t *u) {
 
   printf("\x1b[0m\x1b[2J");
 
-  vec_foreach(&(u->b), tmp, i) { ui_draw_one(tmp, 0, u); }
+  vec_foreach(&(u->b), tmp, i) { u->ui_draw_one(tmp, 0); }
   fflush(stdout);
   u->force = 0;
 }
@@ -343,10 +345,12 @@ inline void _ui_update(char *c, int n, ui_t *u) {
 /*
  * HELPERS
  */
-inline void _ui_text(ui_box_t *b, char *out) { sprintf(out, "%s", (char *)b->data1); }
+inline void _ui_text(ui_box_t *b, char *out) {
+  sprintf(out, "%s", (char *)b->data1);
+}
 
 inline int ui_text(int x, int y, char *str, int screen, loop_func click,
-            loop_func hover, ui_t *u) {
+                   loop_func hover, ui_t *u) {
   return ui_add(x, y, strlen(str), 1, screen, NULL, 0, _ui_text, click, hover,
                 str, NULL, u);
 }
