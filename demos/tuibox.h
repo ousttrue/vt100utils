@@ -38,7 +38,7 @@
   int n;                                                                       \
   while ((n = read(STDIN_FILENO, buf, sizeof(buf))) > 0)
 
-#define ui_update(u) _ui_update(buf, n, u)
+#define ui_update(u) u._ui_update(buf, n)
 
 #define ui_get(id, u) ((u)->b.data[id])
 
@@ -46,13 +46,13 @@
   tok = strtok(NULL, ";");                                                     \
   x = atoi(tok);                                                               \
   tok = strtok(NULL, ";");                                                     \
-  y = strtol(tok, NULL, 10) - (u->canscroll ? u->scroll : 0)
+  y = strtol(tok, NULL, 10) - (this->canscroll ? this->scroll : 0)
 
 #define LOOP_AND_EXECUTE(f)                                                    \
   do {                                                                         \
-    vec_foreach(&(u->b), tmp, ind) {                                           \
-      if (tmp->screen == u->screen && f != NULL && box_contains(x, y, tmp)) {  \
-        f(tmp, x, y, u->mouse);                                                \
+    vec_foreach(&(this->b), tmp, ind) {                                           \
+      if (tmp->screen == this->screen && f != NULL && box_contains(x, y, tmp)) {  \
+        f(tmp, x, y, this->mouse);                                                \
       }                                                                        \
     }                                                                          \
   } while (0)
@@ -226,7 +226,7 @@ struct ui_t {
    * Draws a single box to the
    *   screen.
    */
-  inline void ui_draw_one(ui_box_t *tmp, int flush) {
+  void ui_draw_one(ui_box_t *tmp, int flush) {
     char *buf, *tok;
     int n = -1;
 
@@ -280,81 +280,77 @@ struct ui_t {
     this->force = 1;
     ui_draw();
   }
-};
 
-/* =========================== */
+  /*
+   * Adds a new key event listener
+   *   to the UI.
+   */
+  void ui_key(const char *c, func f) {
+    auto e = (ui_evt_t *)malloc(sizeof(ui_evt_t));
+    e->c = c;
+    e->f = f;
 
-/*
- * Adds a new key event listener
- *   to the UI.
- */
-inline void ui_key(const char *c, func f, ui_t *u) {
-  auto e = (ui_evt_t *)malloc(sizeof(ui_evt_t));
-  e->c = c;
-  e->f = f;
+    vec_push(&(this->e), e);
+  }
 
-  vec_push(&(u->e), e);
-}
+  /*
+   * Clears all elements from
+   *   the UI.
+   */
+  void ui_clear() {
+    int tmp = this->screen;
+    this->ui_free();
+    this->ui_new(tmp);
+  }
 
-/*
- * Clears all elements from
- *   the UI.
- */
-inline void ui_clear(ui_t *u) {
-  int tmp = u->screen;
+  /*
+   * Handles mouse and keyboard
+   *   events, given a read()
+   *   buffer.
+   *
+   * This is prefixed with an underscore
+   *   to ensure consistency with the
+   *   ui_loop macro, ensuring that the
+   *   variables buf and n remain
+   *   opaque to the user.
+   */
+  void _ui_update(char *c, int n) {
+    ui_box_t *tmp;
+    ui_evt_t *evt;
+    int ind, x, y;
+    char cpy[n], *tok;
 
-  u->ui_free();
-  u->ui_new(tmp);
-}
+    if (n >= 4 && c[0] == '\x1b' && c[1] == '[' && c[2] == '<') {
+      strncpy(cpy, c, n);
+      tok = strtok(cpy + 3, ";");
 
-/*
- * Handles mouse and keyboard
- *   events, given a read()
- *   buffer.
- *
- * This is prefixed with an underscore
- *   to ensure consistency with the
- *   ui_loop macro, ensuring that the
- *   variables buf and n remain
- *   opaque to the user.
- */
-inline void _ui_update(char *c, int n, ui_t *u) {
-  ui_box_t *tmp;
-  ui_evt_t *evt;
-  int ind, x, y;
-  char cpy[n], *tok;
-
-  if (n >= 4 && c[0] == '\x1b' && c[1] == '[' && c[2] == '<') {
-    strncpy(cpy, c, n);
-    tok = strtok(cpy + 3, ";");
-
-    switch (tok[0]) {
-    case '0':
-      u->mouse = (strchr(c, 'm') == NULL);
-      if (u->mouse) {
+      switch (tok[0]) {
+      case '0':
+        this->mouse = (strchr(c, 'm') == NULL);
+        if (this->mouse) {
+          COORDINATE_DECODE();
+          LOOP_AND_EXECUTE(tmp->onclick);
+        }
+        break;
+      case '3':
+        this->mouse = (strcmp(tok, "32") == 0);
         COORDINATE_DECODE();
-        LOOP_AND_EXECUTE(tmp->onclick);
+        LOOP_AND_EXECUTE(tmp->onhover);
+        break;
+      case '6':
+        if (this->canscroll) {
+          this->scroll += (4 * (tok[1] == '4')) - 2;
+          printf("\x1b[0m\x1b[2J");
+          this->ui_draw();
+        }
+        break;
       }
-      break;
-    case '3':
-      u->mouse = (strcmp(tok, "32") == 0);
-      COORDINATE_DECODE();
-      LOOP_AND_EXECUTE(tmp->onhover);
-      break;
-    case '6':
-      if (u->canscroll) {
-        u->scroll += (4 * (tok[1] == '4')) - 2;
-        printf("\x1b[0m\x1b[2J");
-        u->ui_draw();
-      }
-      break;
+    }
+
+    vec_foreach(&(this->e), evt, ind) {
+      if (strncmp(c, evt->c, strlen(evt->c)) == 0)
+        evt->f();
     }
   }
-
-  vec_foreach(&(u->e), evt, ind) {
-    if (strncmp(c, evt->c, strlen(evt->c)) == 0)
-      evt->f();
-  }
-}
-
+};
 #endif

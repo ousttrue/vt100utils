@@ -99,14 +99,14 @@ main(void)
 
   u.ui_new(0);
 
-  ui_key("\x1b[C", grow, &u);
-  ui_key("\x1b[D", shrink, &u);
-  ui_key("q", stop, &u);
+  u.ui_key("\x1b[C", grow);
+  u.ui_key("\x1b[D", shrink);
+  u.ui_key("q", stop);
 
   draw();
 
   ui_loop(&u) {
-    ui_update(&u);
+    ui_update(u);
   }
 
   return 0;

@@ -90,12 +90,12 @@ main(void)
     NULL
   );
 
-  ui_key("q", stop, &u);
+  u.ui_key("q", stop);
 
   u.ui_draw();
 
   ui_loop(&u) {
-    ui_update(&u);
+    ui_update(u);
   }
 
   return 0;
