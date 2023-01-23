@@ -13,20 +13,8 @@
 #include <termios.h>
 #include <unistd.h>
 
-/*
- * PREPROCESSOR
- */
-#define MAXCACHESIZE 65535
-
-#define box_contains(x, y, b)                                                  \
-  (x >= b->x && x <= b->x + b->w && y >= b->y && y <= b->y + b->h)
-
-#define ui_screen(s, u)                                                        \
-  u->screen = s;                                                               \
-  u->force = 1
-
-#define UI_CENTER_X -1
-#define UI_CENTER_Y -1
+const int UI_CENTER_X = -1;
+const int UI_CENTER_Y = -1;
 
 /* The argument isn't actually necessary here, but it helps with design
  * consistency */
@@ -36,8 +24,6 @@
   while ((n = read(STDIN_FILENO, buf, sizeof(buf))) > 0)
 
 #define ui_update(u) u._ui_update(buf, n)
-
-#define ui_get(id, u) ((u)->b.data[id])
 
 /*
  * TYPES
@@ -59,6 +45,10 @@ struct ui_box_t {
   loop_func onhover;
   void *data1;
   void *data2;
+
+  bool box_contains(int x, int y) const {
+    return x >= this->x && x <= this->x + this->w && y >= this->y && y <= this->y + this->h;
+  }
 };
 
 struct ui_evt_t {

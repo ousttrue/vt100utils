@@ -1,5 +1,7 @@
 #include "tuibox.h"
 
+#define MAXCACHESIZE 65535
+
 #define COORDINATE_DECODE()                                                    \
   tok = strtok(NULL, ";");                                                     \
   x = atoi(tok);                                                               \
@@ -10,7 +12,7 @@
   do {                                                                         \
     vec_foreach(&(this->b), tmp, ind) {                                        \
       if (tmp->screen == this->screen && f != NULL &&                          \
-          box_contains(x, y, tmp)) {                                           \
+          tmp->box_contains(x, y)) {                                           \
         f(tmp, x, y, this->mouse);                                             \
       }                                                                        \
     }                                                                          \
