@@ -20,7 +20,7 @@ int main(){
   struct vt100_node_t *head;
 
   ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws);
-  buf = malloc(ws.ws_row * ws.ws_col * 20);
+  buf = (char*)malloc(ws.ws_row * ws.ws_col * 20);
 
   for(y=0;y<ws.ws_row;y++){
     for(x=0;x<ws.ws_col;x++){

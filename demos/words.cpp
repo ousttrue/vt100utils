@@ -13,7 +13,7 @@ struct vt100_node_t *head;
 void
 draw(ui_box_t *b, char *out)
 {
-  struct vt100_node_t *node = b->data1;
+  struct vt100_node_t *node = (struct vt100_node_t *)b->data1;
   char *sgr = vt100_sgr(node, NULL);
 
   sprintf(out, "%s%s", sgr, node->str);
@@ -21,9 +21,9 @@ draw(ui_box_t *b, char *out)
 }
 
 void
-click(ui_box_t *b, int x, int y)
+click(ui_box_t *b, int x, int y, int)
 {
-  struct vt100_node_t *node = b->data1;
+  struct vt100_node_t *node = (struct vt100_node_t *)b->data1;
   node->fg.value += 10;
   if (node->fg.value > 255)
     node->fg.value = 10;

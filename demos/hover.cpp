@@ -40,7 +40,7 @@ draw(ui_box_t *b, char *out)
 }
 
 void
-click(ui_box_t *b, int x, int y)
+click(ui_box_t *b, int x, int y, int)
 {
   while (w < 50) {
     w++;
@@ -53,7 +53,7 @@ void
 hover(ui_box_t *b, int x, int y, int down)
 {
   if (down) {
-    click(b, x, y);
+    click(b, x, y, {});
   } else {
     while (w > 12) {
       w--;

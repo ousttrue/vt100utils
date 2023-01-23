@@ -3,28 +3,28 @@ m_dep = c.find_library('m')
 
 executable(
     'hover',
-    'hover.c',
+    'hover.cpp',
     install: true,
     dependencies: vt100utils_dep,
 )
 
 executable(
     'overflow',
-    'overflow.c',
+    'overflow.cpp',
     install: true,
     dependencies: vt100utils_dep,
 )
 
 executable(
     'words',
-    'words.c',
+    'words.cpp',
     install: true,
     dependencies: [vt100utils_dep, m_dep],
 )
 
 executable(
     'truecolor_stresstest',
-    'truecolor_stresstest.c',
+    'truecolor_stresstest.cpp',
     install: true,
     dependencies: [vt100utils_dep, m_dep],
 )
