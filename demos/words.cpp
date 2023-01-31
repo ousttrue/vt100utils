@@ -4,18 +4,20 @@
 
 #include "../vt100utils.h"
 #include "tuibox.h"
+#include <sstream>
 
 #define MIN(a, b) (a < b ? a : b)
 
 ui_t u;
 struct vt100_node_t *head;
 
-void draw(ui_box_t *b, char *out) {
+std::string draw(ui_box_t *b) {
   struct vt100_node_t *node = (struct vt100_node_t *)b->data1;
   char *sgr = vt100_sgr(node, NULL);
-
-  sprintf(out, "%s%s", sgr, node->str);
+  std::stringstream ss;
+  ss << sgr << node->str;
   free(sgr);
+  return ss.str();
 }
 
 void click(ui_box_t *b, int x, int y, int) {

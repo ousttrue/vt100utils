@@ -2,6 +2,7 @@
  * tuibox.h: simple tui library
  */
 #pragma once
+#include <string>
 #include <sys/ioctl.h>
 #include <termios.h>
 #include <vector>
@@ -13,7 +14,7 @@ const int UI_CENTER_Y = -1;
  * TYPES
  */
 typedef void (*func)();
-using draw_func = void (*)(struct ui_box_t *, char *);
+using draw_func = std::string (*)(struct ui_box_t *);
 using loop_func = void (*)(struct ui_box_t *, int, int, int);
 
 struct ui_box_t {
@@ -21,7 +22,7 @@ struct ui_box_t {
   int x, y;
   int w, h;
   int screen;
-  char *cache;
+  std::string cache;
   char *watch;
   char last;
   draw_func draw;
@@ -90,8 +91,6 @@ public:
   /*
    * HELPERS
    */
-  static void _ui_text(ui_box_t *b, char *out);
-
   int ui_text(int x, int y, char *str, int screen, loop_func click,
               loop_func hover);
 

@@ -4,6 +4,7 @@
 
 #include "../vt100utils.h"
 #include "tuibox.h"
+#include <sstream>
 #include <unistd.h>
 
 #define MIN(a, b) (a < b ? a : b)
@@ -12,21 +13,19 @@ ui_t u;
 struct vt100_node_t *head;
 int w = 12;
 
-void draw(ui_box_t *b, char *out) {
+std::string draw(ui_box_t *b) {
   struct vt100_node_t *tmp = head->next;
   char *sgr;
   int len = 0;
-  int full_len = 0;
-
+  std::stringstream ss;
   while (tmp != NULL) {
     sgr = vt100_sgr(tmp, NULL);
-    full_len +=
-        sprintf(out + full_len, "%s%.*s", sgr, MAX(0, w - len), tmp->str);
-    len += tmp->len;
+    ss << sgr << MAX(0, w - len) << tmp->str;
     free(sgr);
     tmp = tmp->next;
   }
-  sprintf(out + full_len, "%s\n", w < 47 ? "..." : "");
+  ss << (w < 47 ? "..." : "") << "\n";
+  return ss.str();
 }
 
 void click(ui_box_t *b, int x, int y, int) {

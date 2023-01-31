@@ -1,4 +1,5 @@
 #include "tuibox.h"
+#include <sstream>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -47,10 +48,6 @@ void ui_t::ui_free() {
   printf("\x1b[0m\x1b[2J\x1b[?1049l\x1b[?1003l\x1b[?1015l\x1b[?1006l\x1b[?25h");
   tcsetattr(STDIN_FILENO, TCSAFLUSH, &(this->tio));
 
-  for (auto &val : this->b) {
-    free(val.cache);
-  }
-
   term = getenv("TERM");
   if (strncmp(term, "screen", 6) == 0 || strncmp(term, "tmux", 4) == 0) {
     printf("Note: Terminal multiplexer detected.\n  For best performance (i.e. "
@@ -73,7 +70,6 @@ void ui_t::ui_free() {
 int ui_t::ui_add(int x, int y, int w, int h, int screen, char *watch,
                  char initial, draw_func draw, loop_func onclick,
                  loop_func onhover, void *data1, void *data2) {
-  char *buf = (char *)malloc(MAXCACHESIZE);
 
   ui_box_t b = {};
 
@@ -96,8 +92,7 @@ int ui_t::ui_add(int x, int y, int w, int h, int screen, char *watch,
   b.data1 = data1;
   b.data2 = data2;
 
-  draw(&b, buf);
-  b.cache = (char *)realloc(buf, strlen(buf) * 2);
+  b.cache = draw(&b);
 
   this->b.push_back(b);
 
@@ -107,9 +102,7 @@ int ui_t::ui_add(int x, int y, int w, int h, int screen, char *watch,
 /*
  * HELPERS
  */
-void ui_t::_ui_text(ui_box_t *b, char *out) {
-  sprintf(out, "%s", (char *)b->data1);
-}
+std::string _ui_text(ui_box_t *b) { return std::string((char *)b->data1); }
 
 int ui_t::ui_text(int x, int y, char *str, int screen, loop_func click,
                   loop_func hover) {
@@ -126,23 +119,24 @@ int ui_t::CURSOR_Y(ui_box_t *b, int n) {
  *   screen.
  */
 void ui_t::ui_draw_one(ui_box_t *tmp, int flush) {
-  char *buf, *tok;
-  int n = -1;
 
   if (tmp->screen != this->screen)
     return;
 
-  buf = (char *)calloc(1, strlen(tmp->cache) * 2);
+  // buf = (char *)calloc(1, strlen(tmp->cache) * 2);
+  std::string buf;
   if (this->force || tmp->watch == NULL || *(tmp->watch) != tmp->last) {
-    tmp->draw(tmp, buf);
+    buf = tmp->draw(tmp);
     if (tmp->watch != NULL)
       tmp->last = *(tmp->watch);
-    strcpy(tmp->cache, buf);
+    tmp->cache = buf;
   } else {
     /* buf is allocated proportionally to tmp->cache, so strcpy is safe */
-    strcpy(buf, tmp->cache);
+    buf = tmp->cache;
   }
-  tok = strtok(buf, "\n");
+
+  auto tok = strtok((char *)buf.data(), "\n");
+  int n = -1;
   while (tok != NULL) {
     if (tmp->x > 0 && tmp->x < this->ws.ws_col && CURSOR_Y(tmp, n) > 0 &&
         CURSOR_Y(tmp, n) < this->ws.ws_row) {
@@ -151,7 +145,6 @@ void ui_t::ui_draw_one(ui_box_t *tmp, int flush) {
     }
     tok = strtok(NULL, "\n");
   }
-  free(buf);
 
   if (flush)
     fflush(stdout);
