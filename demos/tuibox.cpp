@@ -47,22 +47,14 @@ public:
  *   necessary escape codes
  *   for mouse support.
  */
-void ui_t::ui_new(int s) {
-  this->impl_ = new ui_t_impl();
-  this->mouse = 0;
-  this->screen = s;
-  this->scroll = 0;
-  this->canscroll = 1;
-  this->id = 0;
-  this->force = 0;
-}
+ui_t::ui_t(int s) : impl_(new ui_t_impl), screen(s) {}
 
 /*
  * Frees the given UI struct,
  *   and takes the terminal
  *   out of raw mode.
  */
-void ui_t::ui_free() {
+ui_t::~ui_t() {
   delete impl_;
   auto term = getenv("TERM");
   if (strncmp(term, "screen", 6) == 0 || strncmp(term, "tmux", 4) == 0) {
@@ -202,16 +194,6 @@ void ui_t::ui_key(const char *c, func f) {
       .c = c,
       .f = f,
   });
-}
-
-/*
- * Clears all elements from
- *   the UI.
- */
-void ui_t::ui_clear() {
-  int tmp = this->screen;
-  this->ui_free();
-  this->ui_new(tmp);
 }
 
 /*

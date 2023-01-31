@@ -40,20 +40,20 @@ struct ui_evt_t {
   func f;
 };
 
-using vec_box_t = std::vector<ui_box_t>;
-using vec_evt_t = std::vector<ui_evt_t>;
-
 class ui_t {
   class ui_t_impl *impl_ = nullptr;
-  vec_box_t b;
-  vec_evt_t e;
-  int mouse, screen, scroll, canscroll, id, force;
+  std::vector<ui_box_t> b;
+  std::vector<ui_evt_t> e;
+  int mouse = 0;
+  int screen;
+  int scroll = 0;
+  bool canscroll = true;
+  int id = 0;
+  int force = 0;
 
 public:
-  uint16_t cols() const;
-  uint16_t rows() const;
-  int ui_center_x(int w) const { return (cols() - w) / 2; }
-  int ui_center_y(int h) const { return (rows() - h) / 2; }
+  ui_t(const ui_t &) = delete;
+  ui_t &operator=(const ui_t &) = delete;
 
   /*
    * Initializes a new UI struct,
@@ -62,14 +62,19 @@ public:
    *   necessary escape codes
    *   for mouse support.
    */
-  void ui_new(int s);
+  ui_t(int s);
 
   /*
    * Frees the given UI struct,
    *   and takes the terminal
    *   out of raw mode.
    */
-  void ui_free();
+  ~ui_t();
+
+  uint16_t cols() const;
+  uint16_t rows() const;
+  int ui_center_x(int w) const { return (cols() - w) / 2; }
+  int ui_center_y(int h) const { return (rows() - h) / 2; }
 
   /*
    * Adds a new box to the UI.
@@ -116,12 +121,6 @@ public:
    *   to the UI.
    */
   void ui_key(const char *c, func f);
-
-  /*
-   * Clears all elements from
-   *   the UI.
-   */
-  void ui_clear();
 
   void ui_mainloop();
 

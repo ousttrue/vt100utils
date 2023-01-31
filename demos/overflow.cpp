@@ -7,21 +7,20 @@
 
 #define MIN(a, b) (a < b ? a : b)
 
-ui_t u;
-struct vt100_node_t *head;
+ui_t *g_u = nullptr;
+struct vt100_node_t *g_head = nullptr;
 int w = 50;
 
-void
-draw(void)
-{
-  struct vt100_node_t *tmp;
+void draw(void) {
   int x = 0;
   int off = 0;
   char *sgr;
 
-  printf("\x1b[0;0H\x1b[2J\x1b[36m(Press \"q\" to exit)\n\x1b[32mColumn width: %i\x1b[0m\n\n", w);
+  printf("\x1b[0;0H\x1b[2J\x1b[36m(Press \"q\" to exit)\n\x1b[32mColumn width: "
+         "%i\x1b[0m\n\n",
+         w);
 
-  tmp = head->next;
+  auto tmp = g_head->next;
 
   printf("        \x1b[35m┌");
   for (x = 1; x < w + 2; x++) {
@@ -68,44 +67,43 @@ draw(void)
   printf("\n\n\x1b[0m");
 }
 
-void
-shrink()
-{
+void shrink() {
   if (w > 4)
     w--;
   draw();
 }
 
-void
-grow()
-{
-  if (w < u.cols() - 3)
+void grow() {
+  if (w < g_u->cols() - 3)
     w++;
   draw();
 }
 
-void
-stop()
-{
-  u.ui_free();
-  vt100_free(head);
+void stop() {
+  delete g_u;
+  vt100_free(g_head);
   exit(0);
 }
 
-int
-main(void)
-{
-  head = vt100_decode("\x1b[31mLorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \x1b[32mUt enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. \x1b[33mDuis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. \x1b[34mExcepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.");
+int main(void) {
+  g_head = vt100_decode(
+      "\x1b[31mLorem ipsum dolor sit amet, consectetur adipiscing elit, sed do "
+      "eiusmod tempor incididunt ut labore et dolore magna aliqua. \x1b[32mUt "
+      "enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut "
+      "aliquip ex ea commodo consequat. \x1b[33mDuis aute irure dolor in "
+      "reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla "
+      "pariatur. \x1b[34mExcepteur sint occaecat cupidatat non proident, sunt "
+      "in culpa qui officia deserunt mollit anim id est laborum.");
 
-  u.ui_new(0);
+  g_u = new ui_t(0);
 
-  u.ui_key("\x1b[C", grow);
-  u.ui_key("\x1b[D", shrink);
-  u.ui_key("q", stop);
+  g_u->ui_key("\x1b[C", grow);
+  g_u->ui_key("\x1b[D", shrink);
+  g_u->ui_key("q", stop);
 
   draw();
 
-  u.ui_mainloop();
+  g_u->ui_mainloop();
 
   return 0;
 }

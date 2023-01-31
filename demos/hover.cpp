@@ -9,7 +9,7 @@
 
 #define MIN(a, b) (a < b ? a : b)
 
-ui_t u;
+ui_t *g_u = nullptr;
 struct vt100_node_t *head;
 int w = 12;
 
@@ -31,7 +31,7 @@ std::string draw(ui_box_t *b) {
 void click(ui_box_t *b, int x, int y, int) {
   while (w < 50) {
     w++;
-    u.ui_draw();
+    g_u->ui_draw();
     usleep(10000);
   }
 }
@@ -42,14 +42,14 @@ void hover(ui_box_t *b, int x, int y, int down) {
   } else {
     while (w > 12) {
       w--;
-      u.ui_draw();
+      g_u->ui_draw();
       usleep(10000);
     }
   }
 }
 
 void stop() {
-  u.ui_free();
+  delete g_u;
   vt100_free(head);
   exit(0);
 }
@@ -61,16 +61,16 @@ int main(void) {
       "\x1b[38;5;140mt\x1b[38;5;145me\x1b[38;5;150mx\x1b[38;5;155mt\x1b[0;36m "
       "un-truncate!");
 
-  u.ui_new(0);
+  g_u = new ui_t(0);
 
-  u.ui_add(UI_CENTER_X, UI_CENTER_Y, 35, 1, 0, NULL, 0, draw, click, hover,
+  g_u->ui_add(UI_CENTER_X, UI_CENTER_Y, 35, 1, 0, NULL, 0, draw, click, hover,
            NULL, NULL);
 
-  u.ui_key("q", stop);
+  g_u->ui_key("q", stop);
 
-  u.ui_draw();
+  g_u->ui_draw();
 
-  u.ui_mainloop();
+  g_u->ui_mainloop();
 
   return 0;
 }

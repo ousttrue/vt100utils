@@ -8,7 +8,7 @@
 
 #define MIN(a, b) (a < b ? a : b)
 
-ui_t u;
+ui_t *g_u = nullptr;
 struct vt100_node_t *head;
 
 std::string draw(ui_box_t *b) {
@@ -25,11 +25,11 @@ void click(ui_box_t *b, int x, int y, int) {
   node->fg.value += 10;
   if (node->fg.value > 255)
     node->fg.value = 10;
-  u.ui_draw();
+  g_u->ui_draw();
 }
 
 void stop() {
-  u.ui_free();
+  delete g_u;
   vt100_free(head);
   exit(0);
 }
@@ -56,26 +56,26 @@ int main(void) {
       "5;143min\x1B[38;5;144mless\x1B[38;5;145mthan\x1B[38;5;146m100\x1B[38;5;"
       "147mlines\x1B[38;5;148mof\x1B[38;5;149mcode.");
 
-  u.ui_new(0);
+  g_u = new ui_t(0);
 
-  x = (u.cols() - 50) / 2;
-  y = (u.rows() - 10) / 2;
+  x = (g_u->cols() - 50) / 2;
+  y = (g_u->rows() - 10) / 2;
 
   tmp = head->next;
   while (tmp != NULL) {
-    u.ui_add(x, y, tmp->len, 1, 0, NULL, 0, draw, click, NULL, tmp, NULL);
+    g_u->ui_add(x, y, tmp->len, 1, 0, NULL, 0, draw, click, NULL, tmp, NULL);
     x += tmp->len;
-    if (x > (u.cols() + 50) / 2) {
-      x = (u.cols() - 50) / 2;
+    if (x > (g_u->cols() + 50) / 2) {
+      x = (g_u->cols() - 50) / 2;
       y += 2;
     }
     tmp = tmp->next;
   }
 
-  u.ui_key("q", stop);
-  u.ui_draw();
+  g_u->ui_key("q", stop);
+  g_u->ui_draw();
 
-  u.ui_mainloop();
+  g_u->ui_mainloop();
 
   return 0;
 }
