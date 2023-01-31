@@ -79,7 +79,7 @@ shrink()
 void
 grow()
 {
-  if (w < u.ws.ws_col - 3)
+  if (w < u.cols() - 3)
     w++;
   draw();
 }

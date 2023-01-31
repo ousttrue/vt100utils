@@ -58,15 +58,15 @@ int main(void) {
 
   u.ui_new(0);
 
-  x = (u.ws.ws_col - 50) / 2;
-  y = (u.ws.ws_row - 10) / 2;
+  x = (u.cols() - 50) / 2;
+  y = (u.rows() - 10) / 2;
 
   tmp = head->next;
   while (tmp != NULL) {
     u.ui_add(x, y, tmp->len, 1, 0, NULL, 0, draw, click, NULL, tmp, NULL);
     x += tmp->len;
-    if (x > (u.ws.ws_col + 50) / 2) {
-      x = (u.ws.ws_col - 50) / 2;
+    if (x > (u.cols() + 50) / 2) {
+      x = (u.cols() - 50) / 2;
       y += 2;
     }
     tmp = tmp->next;

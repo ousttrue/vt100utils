@@ -3,9 +3,42 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/ioctl.h>
+#include <termios.h>
 #include <unistd.h>
 
 #define MAXCACHESIZE 65535
+
+class ui_t_impl {
+  struct termios tio;
+  struct winsize ws;
+
+public:
+  ui_t_impl() {
+    struct termios raw;
+    ioctl(STDOUT_FILENO, TIOCGWINSZ, &(this->ws));
+    tcgetattr(STDIN_FILENO, &(this->tio));
+    raw = this->tio;
+    raw.c_lflag &= ~(ECHO | ICANON);
+    tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw);
+    printf(
+        "\x1b[?1049h\x1b[0m\x1b[2J\x1b[?1003h\x1b[?1015h\x1b[?1006h\x1b[?25l");
+  }
+
+  ~ui_t_impl() {
+    printf(
+        "\x1b[0m\x1b[2J\x1b[?1049l\x1b[?1003l\x1b[?1015l\x1b[?1006l\x1b[?25h");
+    tcsetattr(STDIN_FILENO, TCSAFLUSH, &(this->tio));
+  }
+
+  bool Contains(int x, int y) const {
+    return x > 0 && x < this->ws.ws_col && y > 0 && y < this->ws.ws_row;
+  }
+
+  uint16_t Cols() const { return ws.ws_col; }
+
+  uint16_t Rows() const { return ws.ws_row; }
+};
 
 /*
  * Initializes a new UI struct,
@@ -15,25 +48,12 @@
  *   for mouse support.
  */
 void ui_t::ui_new(int s) {
-  struct termios raw;
-
-  ioctl(STDOUT_FILENO, TIOCGWINSZ, &(this->ws));
-
-  tcgetattr(STDIN_FILENO, &(this->tio));
-  raw = this->tio;
-  raw.c_lflag &= ~(ECHO | ICANON);
-  tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw);
-
-  printf("\x1b[?1049h\x1b[0m\x1b[2J\x1b[?1003h\x1b[?1015h\x1b[?1006h\x1b[?25l");
-
+  this->impl_ = new ui_t_impl();
   this->mouse = 0;
-
   this->screen = s;
   this->scroll = 0;
   this->canscroll = 1;
-
   this->id = 0;
-
   this->force = 0;
 }
 
@@ -43,18 +63,17 @@ void ui_t::ui_new(int s) {
  *   out of raw mode.
  */
 void ui_t::ui_free() {
-  char *term;
-
-  printf("\x1b[0m\x1b[2J\x1b[?1049l\x1b[?1003l\x1b[?1015l\x1b[?1006l\x1b[?25h");
-  tcsetattr(STDIN_FILENO, TCSAFLUSH, &(this->tio));
-
-  term = getenv("TERM");
+  delete impl_;
+  auto term = getenv("TERM");
   if (strncmp(term, "screen", 6) == 0 || strncmp(term, "tmux", 4) == 0) {
     printf("Note: Terminal multiplexer detected.\n  For best performance (i.e. "
            "reduced flickering), running natively inside\n  a GPU-accelerated "
            "terminal such as alacritty or kitty is recommended.\n");
   }
 }
+
+uint16_t ui_t::cols() const { return impl_->Cols(); }
+uint16_t ui_t::rows() const { return impl_->Rows(); }
 
 /*
  * Adds a new box to the UI.
@@ -137,9 +156,8 @@ void ui_t::ui_draw_one(ui_box_t *tmp, int flush) {
 
   auto tok = strtok((char *)buf.data(), "\n");
   int n = -1;
-  while (tok != NULL) {
-    if (tmp->x > 0 && tmp->x < this->ws.ws_col && CURSOR_Y(tmp, n) > 0 &&
-        CURSOR_Y(tmp, n) < this->ws.ws_row) {
+  while (tok) {
+    if (impl_->Contains(tmp->x, CURSOR_Y(tmp, n))) {
       printf("\x1b[%i;%iH%s", CURSOR_Y(tmp, n), tmp->x, tok);
       n++;
     }

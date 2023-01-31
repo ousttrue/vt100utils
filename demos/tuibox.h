@@ -3,8 +3,6 @@
  */
 #pragma once
 #include <string>
-#include <sys/ioctl.h>
-#include <termios.h>
 #include <vector>
 
 const int UI_CENTER_X = -1;
@@ -46,16 +44,16 @@ using vec_box_t = std::vector<ui_box_t>;
 using vec_evt_t = std::vector<ui_evt_t>;
 
 class ui_t {
-  struct termios tio;
+  class ui_t_impl *impl_ = nullptr;
   vec_box_t b;
   vec_evt_t e;
   int mouse, screen, scroll, canscroll, id, force;
 
 public:
-  struct winsize ws;
-
-  int ui_center_x(int w) const { return (this->ws.ws_col - w) / 2; }
-  int ui_center_y(int h) const { return (this->ws.ws_row - h) / 2; }
+  uint16_t cols() const;
+  uint16_t rows() const;
+  int ui_center_x(int w) const { return (cols() - w) / 2; }
+  int ui_center_y(int h) const { return (rows() - h) / 2; }
 
   /*
    * Initializes a new UI struct,
