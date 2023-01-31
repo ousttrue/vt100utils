@@ -4,6 +4,7 @@
 
 #include "../vt100utils.h"
 #include "tuibox.h"
+#include <unistd.h>
 
 #define MIN(a, b) (a < b ? a : b)
 

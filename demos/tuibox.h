@@ -1,17 +1,9 @@
 /*
  * tuibox.h: simple tui library
  */
-
-#ifndef TUIBOX_H
-#define TUIBOX_H
-
-// #include "vec.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#pragma once
 #include <sys/ioctl.h>
 #include <termios.h>
-#include <unistd.h>
 #include <vector>
 
 const int UI_CENTER_X = -1;
@@ -150,4 +142,3 @@ private:
    */
   void _ui_update(char *c, int n);
 };
-#endif
