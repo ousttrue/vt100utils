@@ -47,14 +47,14 @@ public:
  *   necessary escape codes
  *   for mouse support.
  */
-ui_t::ui_t(int s) : impl_(new ui_t_impl), screen(s) {}
+tuibox::tuibox(int s) : impl_(new ui_t_impl), screen(s) {}
 
 /*
  * Frees the given UI struct,
  *   and takes the terminal
  *   out of raw mode.
  */
-ui_t::~ui_t() {
+tuibox::~tuibox() {
   delete impl_;
   auto term = getenv("TERM");
   if (strncmp(term, "screen", 6) == 0 || strncmp(term, "tmux", 4) == 0) {
@@ -64,8 +64,8 @@ ui_t::~ui_t() {
   }
 }
 
-uint16_t ui_t::cols() const { return impl_->Cols(); }
-uint16_t ui_t::rows() const { return impl_->Rows(); }
+uint16_t tuibox::cols() const { return impl_->Cols(); }
+uint16_t tuibox::rows() const { return impl_->Rows(); }
 
 /*
  * Adds a new box to the UI.
@@ -78,7 +78,7 @@ uint16_t ui_t::rows() const { return impl_->Rows(); }
  * TODO: Find some way to
  *   strip this down.
  */
-int ui_t::ui_add(int x, int y, int w, int h, int screen, char *watch,
+int tuibox::ui_add(int x, int y, int w, int h, int screen, char *watch,
                  char initial, draw_func draw, loop_func onclick,
                  loop_func onhover, void *data1, void *data2) {
 
@@ -115,13 +115,13 @@ int ui_t::ui_add(int x, int y, int w, int h, int screen, char *watch,
  */
 std::string _ui_text(ui_box_t *b) { return std::string((char *)b->data1); }
 
-int ui_t::ui_text(int x, int y, char *str, int screen, loop_func click,
+int tuibox::ui_text(int x, int y, char *str, int screen, loop_func click,
                   loop_func hover) {
   return this->ui_add(x, y, strlen(str), 1, screen, NULL, 0, _ui_text, click,
                       hover, str, NULL);
 }
 
-int ui_t::CURSOR_Y(ui_box_t *b, int n) {
+int tuibox::CURSOR_Y(ui_box_t *b, int n) {
   return (b->y + (n + 1) + (canscroll ? scroll : 0));
 }
 
@@ -129,7 +129,7 @@ int ui_t::CURSOR_Y(ui_box_t *b, int n) {
  * Draws a single box to the
  *   screen.
  */
-void ui_t::ui_draw_one(ui_box_t *tmp, int flush) {
+void tuibox::ui_draw_one(ui_box_t *tmp, int flush) {
 
   if (tmp->screen != this->screen)
     return;
@@ -163,7 +163,7 @@ void ui_t::ui_draw_one(ui_box_t *tmp, int flush) {
 /*
  * Draws all boxes to the screen.
  */
-void ui_t::ui_draw() {
+void tuibox::ui_draw() {
   ui_box_t *tmp;
   int i;
 
@@ -180,7 +180,7 @@ void ui_t::ui_draw() {
  * Forces a redraw of the screen,
  *   updating all boxes' caches.
  */
-void ui_t::ui_redraw() {
+void tuibox::ui_redraw() {
   this->force = 1;
   ui_draw();
 }
@@ -189,7 +189,7 @@ void ui_t::ui_redraw() {
  * Adds a new key event listener
  *   to the UI.
  */
-void ui_t::ui_key(const char *c, func f) {
+void tuibox::ui_key(const char *c, func f) {
   this->e.push_back({
       .c = c,
       .f = f,
@@ -207,7 +207,7 @@ void ui_t::ui_key(const char *c, func f) {
  *   variables buf and n remain
  *   opaque to the user.
  */
-void ui_t::_ui_update(char *c, int n) {
+void tuibox::_ui_update(char *c, int n) {
   int x, y;
   char cpy[n], *tok;
 
@@ -258,7 +258,7 @@ void ui_t::_ui_update(char *c, int n) {
   }
 }
 
-void ui_t::ui_mainloop() {
+void tuibox::ui_mainloop() {
   char buf[64];
   while (int n = read(STDIN_FILENO, buf, sizeof(buf))) {
     this->_ui_update(buf, n);

@@ -7,7 +7,7 @@
 
 #define MIN(a, b) (a < b ? a : b)
 
-ui_t *g_u = nullptr;
+tuibox *g_u = nullptr;
 struct vt100_node_t *g_head = nullptr;
 int w = 50;
 
@@ -95,7 +95,7 @@ int main(void) {
       "pariatur. \x1b[34mExcepteur sint occaecat cupidatat non proident, sunt "
       "in culpa qui officia deserunt mollit anim id est laborum.");
 
-  g_u = new ui_t(0);
+  g_u = new tuibox(0);
 
   g_u->ui_key("\x1b[C", grow);
   g_u->ui_key("\x1b[D", shrink);

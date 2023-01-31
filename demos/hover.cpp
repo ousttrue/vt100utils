@@ -9,7 +9,7 @@
 
 #define MIN(a, b) (a < b ? a : b)
 
-ui_t *g_u = nullptr;
+tuibox *g_u = nullptr;
 struct vt100_node_t *head;
 int w = 12;
 
@@ -61,7 +61,7 @@ int main(void) {
       "\x1b[38;5;140mt\x1b[38;5;145me\x1b[38;5;150mx\x1b[38;5;155mt\x1b[0;36m "
       "un-truncate!");
 
-  g_u = new ui_t(0);
+  g_u = new tuibox(0);
 
   g_u->ui_add(UI_CENTER_X, UI_CENTER_Y, 35, 1, 0, NULL, 0, draw, click, hover,
            NULL, NULL);

@@ -40,7 +40,7 @@ struct ui_evt_t {
   func f;
 };
 
-class ui_t {
+class tuibox {
   class ui_t_impl *impl_ = nullptr;
   std::vector<ui_box_t> b;
   std::vector<ui_evt_t> e;
@@ -52,8 +52,8 @@ class ui_t {
   int force = 0;
 
 public:
-  ui_t(const ui_t &) = delete;
-  ui_t &operator=(const ui_t &) = delete;
+  tuibox(const tuibox &) = delete;
+  tuibox &operator=(const tuibox &) = delete;
 
   /*
    * Initializes a new UI struct,
@@ -62,14 +62,14 @@ public:
    *   necessary escape codes
    *   for mouse support.
    */
-  ui_t(int s);
+  tuibox(int s);
 
   /*
    * Frees the given UI struct,
    *   and takes the terminal
    *   out of raw mode.
    */
-  ~ui_t();
+  ~tuibox();
 
   uint16_t cols() const;
   uint16_t rows() const;

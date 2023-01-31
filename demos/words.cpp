@@ -8,7 +8,7 @@
 
 #define MIN(a, b) (a < b ? a : b)
 
-ui_t *g_u = nullptr;
+tuibox *g_u = nullptr;
 struct vt100_node_t *head;
 
 std::string draw(ui_box_t *b) {
@@ -56,7 +56,7 @@ int main(void) {
       "5;143min\x1B[38;5;144mless\x1B[38;5;145mthan\x1B[38;5;146m100\x1B[38;5;"
       "147mlines\x1B[38;5;148mof\x1B[38;5;149mcode.");
 
-  g_u = new ui_t(0);
+  g_u = new tuibox(0);
 
   x = (g_u->cols() - 50) / 2;
   y = (g_u->rows() - 10) / 2;
