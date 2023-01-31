@@ -5,13 +5,14 @@
 #ifndef TUIBOX_H
 #define TUIBOX_H
 
-#include "vec.h"
+// #include "vec.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/ioctl.h>
 #include <termios.h>
 #include <unistd.h>
+#include <vector>
 
 const int UI_CENTER_X = -1;
 const int UI_CENTER_Y = -1;
@@ -48,8 +49,8 @@ struct ui_evt_t {
   func f;
 };
 
-typedef vec_t(ui_box_t *) vec_box_t;
-typedef vec_t(ui_evt_t *) vec_evt_t;
+using vec_box_t = std::vector<ui_box_t>;
+using vec_evt_t = std::vector<ui_evt_t>;
 
 class ui_t {
   struct termios tio;

@@ -10,10 +10,9 @@
 
 #define LOOP_AND_EXECUTE(f)                                                    \
   do {                                                                         \
-    vec_foreach(&(this->b), tmp, ind) {                                        \
-      if (tmp->screen == this->screen && f != NULL &&                          \
-          tmp->box_contains(x, y)) {                                           \
-        f(tmp, x, y, this->mouse);                                             \
+    for (auto &tmp : this->b) {                                                \
+      if (tmp.screen == this->screen && f != NULL && tmp.box_contains(x, y)) { \
+        f(&tmp, x, y, this->mouse);                                            \
       }                                                                        \
     }                                                                          \
   } while (0)
@@ -35,8 +34,8 @@ void ui_t::ui_new(int s) {
   raw.c_lflag &= ~(ECHO | ICANON);
   tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw);
 
-  vec_init(&(this->b));
-  vec_init(&(this->e));
+  // vec_init(&(this->b));
+  // vec_init(&(this->e));
 
   printf("\x1b[?1049h\x1b[0m\x1b[2J\x1b[?1003h\x1b[?1015h\x1b[?1006h\x1b[?25l");
 
@@ -57,22 +56,14 @@ void ui_t::ui_new(int s) {
  *   out of raw mode.
  */
 void ui_t::ui_free() {
-  ui_box_t *val;
-  ui_evt_t *evt;
-  int i;
   char *term;
 
   printf("\x1b[0m\x1b[2J\x1b[?1049l\x1b[?1003l\x1b[?1015l\x1b[?1006l\x1b[?25h");
   tcsetattr(STDIN_FILENO, TCSAFLUSH, &(this->tio));
 
-  vec_foreach(&(this->b), val, i) {
-    free(val->cache);
-    free(val);
+  for (auto &val : this->b) {
+    free(val.cache);
   }
-  vec_deinit(&(this->b));
-
-  vec_foreach(&(this->e), evt, i) { free(evt); }
-  vec_deinit(&(this->e));
 
   term = getenv("TERM");
   if (strncmp(term, "screen", 6) == 0 || strncmp(term, "tmux", 4) == 0) {
@@ -98,33 +89,33 @@ int ui_t::ui_add(int x, int y, int w, int h, int screen, char *watch,
                  loop_func onhover, void *data1, void *data2) {
   char *buf = (char *)malloc(MAXCACHESIZE);
 
-  auto b = (ui_box_t *)malloc(sizeof(ui_box_t));
+  ui_box_t b = {};
 
-  b->id = this->id++;
+  b.id = this->id++;
 
-  b->x = (x == UI_CENTER_X ? this->ui_center_x(w) : x);
-  b->y = (y == UI_CENTER_Y ? this->ui_center_y(h) : y);
-  b->w = w;
-  b->h = h;
+  b.x = (x == UI_CENTER_X ? this->ui_center_x(w) : x);
+  b.y = (y == UI_CENTER_Y ? this->ui_center_y(h) : y);
+  b.w = w;
+  b.h = h;
 
-  b->screen = this->screen;
+  b.screen = this->screen;
 
-  b->watch = watch;
-  b->last = initial;
+  b.watch = watch;
+  b.last = initial;
 
-  b->draw = draw;
-  b->onclick = onclick;
-  b->onhover = onhover;
+  b.draw = draw;
+  b.onclick = onclick;
+  b.onhover = onhover;
 
-  b->data1 = data1;
-  b->data2 = data2;
+  b.data1 = data1;
+  b.data2 = data2;
 
-  draw(b, buf);
-  b->cache = (char *)realloc(buf, strlen(buf) * 2);
+  draw(&b, buf);
+  b.cache = (char *)realloc(buf, strlen(buf) * 2);
 
-  vec_push(&(this->b), b);
+  this->b.push_back(b);
 
-  return b->id;
+  return b.id;
 }
 
 /*
@@ -189,7 +180,9 @@ void ui_t::ui_draw() {
 
   printf("\x1b[0m\x1b[2J");
 
-  vec_foreach(&(this->b), tmp, i) { this->ui_draw_one(tmp, 0); }
+  for (auto &tmp : this->b) {
+    this->ui_draw_one(&tmp, 0);
+  }
   fflush(stdout);
   this->force = 0;
 }
@@ -208,11 +201,10 @@ void ui_t::ui_redraw() {
  *   to the UI.
  */
 void ui_t::ui_key(const char *c, func f) {
-  auto e = (ui_evt_t *)malloc(sizeof(ui_evt_t));
-  e->c = c;
-  e->f = f;
-
-  vec_push(&(this->e), e);
+  this->e.push_back({
+      .c = c,
+      .f = f,
+  });
 }
 
 /*
@@ -251,13 +243,13 @@ void ui_t::_ui_update(char *c, int n) {
       this->mouse = (strchr(c, 'm') == NULL);
       if (this->mouse) {
         COORDINATE_DECODE();
-        LOOP_AND_EXECUTE(tmp->onclick);
+        LOOP_AND_EXECUTE(tmp.onclick);
       }
       break;
     case '3':
       this->mouse = (strcmp(tok, "32") == 0);
       COORDINATE_DECODE();
-      LOOP_AND_EXECUTE(tmp->onhover);
+      LOOP_AND_EXECUTE(tmp.onhover);
       break;
     case '6':
       if (this->canscroll) {
@@ -269,9 +261,9 @@ void ui_t::_ui_update(char *c, int n) {
     }
   }
 
-  vec_foreach(&(this->e), evt, ind) {
-    if (strncmp(c, evt->c, strlen(evt->c)) == 0)
-      evt->f();
+  for (auto &evt : this->e) {
+    if (strncmp(c, evt.c, strlen(evt.c)) == 0)
+      evt.f();
   }
 }
 
