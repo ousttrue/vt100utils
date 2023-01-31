@@ -2,21 +2,6 @@
 
 #define MAXCACHESIZE 65535
 
-#define COORDINATE_DECODE()                                                    \
-  tok = strtok(NULL, ";");                                                     \
-  x = atoi(tok);                                                               \
-  tok = strtok(NULL, ";");                                                     \
-  y = strtol(tok, NULL, 10) - (this->canscroll ? this->scroll : 0)
-
-#define LOOP_AND_EXECUTE(f)                                                    \
-  do {                                                                         \
-    for (auto &tmp : this->b) {                                                \
-      if (tmp.screen == this->screen && f != NULL && tmp.box_contains(x, y)) { \
-        f(&tmp, x, y, this->mouse);                                            \
-      }                                                                        \
-    }                                                                          \
-  } while (0)
-
 /*
  * Initializes a new UI struct,
  *   puts the terminal into raw
@@ -33,9 +18,6 @@ void ui_t::ui_new(int s) {
   raw = this->tio;
   raw.c_lflag &= ~(ECHO | ICANON);
   tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw);
-
-  // vec_init(&(this->b));
-  // vec_init(&(this->e));
 
   printf("\x1b[?1049h\x1b[0m\x1b[2J\x1b[?1003h\x1b[?1015h\x1b[?1006h\x1b[?25l");
 
@@ -229,9 +211,7 @@ void ui_t::ui_clear() {
  *   opaque to the user.
  */
 void ui_t::_ui_update(char *c, int n) {
-  ui_box_t *tmp;
-  ui_evt_t *evt;
-  int ind, x, y;
+  int x, y;
   char cpy[n], *tok;
 
   if (n >= 4 && c[0] == '\x1b' && c[1] == '[' && c[2] == '<') {
@@ -242,15 +222,29 @@ void ui_t::_ui_update(char *c, int n) {
     case '0':
       this->mouse = (strchr(c, 'm') == NULL);
       if (this->mouse) {
-        COORDINATE_DECODE();
-        LOOP_AND_EXECUTE(tmp.onclick);
+        tok = strtok(NULL, ";");
+        x = atoi(tok);
+        tok = strtok(NULL, ";");
+        y = strtol(tok, NULL, 10) - (this->canscroll ? this->scroll : 0);
+        for (auto &tmp : this->b) {
+          if (tmp.screen == this->screen && tmp.box_contains(x, y)) {
+            tmp.onclick(&tmp, x, y, this->mouse);
+          }
+        }
       }
       break;
-    case '3':
+    case '3': {
       this->mouse = (strcmp(tok, "32") == 0);
-      COORDINATE_DECODE();
-      LOOP_AND_EXECUTE(tmp.onhover);
-      break;
+      tok = strtok(NULL, ";");
+      x = atoi(tok);
+      tok = strtok(NULL, ";");
+      y = strtol(tok, NULL, 10) - (this->canscroll ? this->scroll : 0);
+      for (auto &tmp : this->b) {
+        if (tmp.screen == this->screen && tmp.box_contains(x, y)) {
+          tmp.onhover(&tmp, x, y, this->mouse);
+        }
+      }
+    } break;
     case '6':
       if (this->canscroll) {
         this->scroll += (4 * (tok[1] == '4')) - 2;
