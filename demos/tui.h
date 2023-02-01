@@ -17,7 +17,6 @@ using draw_func = std::string (*)(struct ui_box_t *);
 using loop_func = void (*)(struct ui_box_t *, int, int, int);
 
 struct ui_box_t {
-  int id;
   int x, y;
   int w, h;
   int screen;
@@ -49,7 +48,6 @@ class tui {
   int screen;
   int scroll = 0;
   bool canscroll = true;
-  int id = 0;
   int force = 0;
 
 public:
@@ -88,14 +86,14 @@ public:
    * TODO: Find some way to
    *   strip this down.
    */
-  int add(int x, int y, int w, int h, int screen, char *watch, char initial,
+  void add(int x, int y, int w, int h, int screen, char *watch, char initial,
              draw_func draw, loop_func onclick, loop_func onhover, void *data1,
              void *data2);
 
   /*
    * HELPERS
    */
-  int add_text(int x, int y, char *str, int screen, loop_func click,
+  void add_text(int x, int y, char *str, int screen, loop_func click,
               loop_func hover);
 
   int cursor_y(ui_box_t *b, int n);

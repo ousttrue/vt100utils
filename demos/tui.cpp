@@ -79,13 +79,11 @@ uint16_t tui::rows() const { return impl_->Rows(); }
  * TODO: Find some way to
  *   strip this down.
  */
-int tui::add(int x, int y, int w, int h, int screen, char *watch,
+void tui::add(int x, int y, int w, int h, int screen, char *watch,
                 char initial, draw_func draw, loop_func onclick,
                 loop_func onhover, void *data1, void *data2) {
 
   ui_box_t b = {};
-
-  b.id = this->id++;
 
   b.x = (x == UI_CENTER_X ? this->center_x(w) : x);
   b.y = (y == UI_CENTER_Y ? this->center_y(h) : y);
@@ -107,8 +105,6 @@ int tui::add(int x, int y, int w, int h, int screen, char *watch,
   b.cache = draw(&b);
 
   this->b.push_back(b);
-
-  return b.id;
 }
 
 /*
@@ -116,9 +112,9 @@ int tui::add(int x, int y, int w, int h, int screen, char *watch,
  */
 static std::string text(ui_box_t *b) { return std::string((char *)b->data1); }
 
-int tui::add_text(int x, int y, char *str, int screen, loop_func click,
+void tui::add_text(int x, int y, char *str, int screen, loop_func click,
                  loop_func hover) {
-  return this->add(x, y, strlen(str), 1, screen, NULL, 0, ::text, click, hover,
+  this->add(x, y, strlen(str), 1, screen, NULL, 0, ::text, click, hover,
                    str, NULL);
 }
 
@@ -165,11 +161,7 @@ void tui::draw_one(ui_box_t *tmp, int flush) {
  * Draws all boxes to the screen.
  */
 void tui::draw() {
-  ui_box_t *tmp;
-  int i;
-
   printf("\x1b[0m\x1b[2J");
-
   for (auto &tmp : this->b) {
     this->draw_one(&tmp, 0);
   }
