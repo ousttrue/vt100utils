@@ -36,15 +36,15 @@ struct ui_box_t {
   }
 };
 
-struct ui_evt_t {
-  const char *c;
+struct tui_event {
+  std::string c;
   func f;
 };
 
 class tuibox {
   class ui_t_impl *impl_ = nullptr;
   std::vector<ui_box_t> b;
-  std::vector<ui_evt_t> e;
+  std::vector<tui_event> e;
   bool mouse = false;
   int screen;
   int scroll = 0;
