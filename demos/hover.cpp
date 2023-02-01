@@ -30,7 +30,6 @@ void click(tui_box *b, int x, int y, int) {
   while (w < 50) {
     w+=10;
     g_u->redraw();
-    g_u->draw();
     usleep(10000);
   }
 }
@@ -42,7 +41,6 @@ void hover(tui_box *b, int x, int y, int down) {
     while (w > 12) {
       w--;
       g_u->redraw();
-      g_u->draw();
       usleep(10000);
     }
   }

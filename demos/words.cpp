@@ -46,7 +46,7 @@ int main(void) {
       node->fg.value += 10;
       if (node->fg.value > 255)
         node->fg.value = 10;
-      _u->draw();
+      _u->redraw();
     };
 
     g_u.add({x, y, tmp->len, 1}, draw, click, {});
