@@ -4,6 +4,7 @@
 #pragma once
 #include <string>
 #include <vector>
+#include <string_view>
 
 const int UI_CENTER_X = -1;
 const int UI_CENTER_Y = -1;
