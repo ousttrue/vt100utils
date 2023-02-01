@@ -208,14 +208,14 @@ void tuibox::on_key(const char *c, func f) {
  *   variables buf and n remain
  *   opaque to the user.
  */
-void tuibox::update(char *c, int n) {
-  if (n >= 4 && c[0] == '\x1b' && c[1] == '[' && c[2] == '<') {
-    Tokenizer tok(c + 3, ';');
+void tuibox::update(std::string_view c) {
+  if (c.starts_with("\x1b[<")) {
+    Tokenizer tok(c.substr(3), ';');
     tok.next();
 
     switch (tok.current()[0]) {
     case '0':
-      this->mouse = (strchr(c, 'm') == NULL);
+      this->mouse = (c.find('m') != std::string_view::npos);
       if (this->mouse) {
         tok.next();
         int x = atoi(tok.current().data());
@@ -255,14 +255,15 @@ void tuibox::update(char *c, int n) {
   }
 
   for (auto &evt : this->e) {
-    if (strncmp(c, evt.c, strlen(evt.c)) == 0)
+    if (c.starts_with(evt.c)) {
       evt.f();
+    }
   }
 }
 
 void tuibox::mainloop() {
   char buf[64];
   while (int n = read(STDIN_FILENO, buf, sizeof(buf))) {
-    this->update(buf, n);
+    this->update(std::string_view(buf, n));
   }
 }

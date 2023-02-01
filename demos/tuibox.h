@@ -45,7 +45,7 @@ class tuibox {
   class ui_t_impl *impl_ = nullptr;
   std::vector<ui_box_t> b;
   std::vector<ui_evt_t> e;
-  int mouse = 0;
+  bool mouse = false;
   int screen;
   int scroll = 0;
   bool canscroll = true;
@@ -137,5 +137,5 @@ private:
    *   variables buf and n remain
    *   opaque to the user.
    */
-  void update(char *c, int n);
+  void update(std::string_view c);
 };
