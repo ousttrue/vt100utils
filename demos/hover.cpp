@@ -62,14 +62,9 @@ int main(void) {
       "un-truncate!");
 
   g_u = new tui(0);
-
-  g_u->add(UI_CENTER_X, UI_CENTER_Y, 35, 1, NULL, 0, draw, click, hover,
-           NULL, NULL);
-
+  g_u->add(UI_CENTER_X, UI_CENTER_Y, 35, 1, draw, click, hover, NULL);
   g_u->on_key("q", stop);
-
   g_u->draw();
-
   g_u->mainloop();
 
   return 0;

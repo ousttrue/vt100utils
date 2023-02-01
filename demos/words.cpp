@@ -63,7 +63,7 @@ int main(void) {
 
   tmp = head->next;
   while (tmp != NULL) {
-    g_u->add(x, y, tmp->len, 1, NULL, 0, draw, click, NULL, tmp, NULL);
+    g_u->add(x, y, tmp->len, 1, draw, click, NULL, tmp);
     x += tmp->len;
     if (x > (g_u->cols() + 50) / 2) {
       x = (g_u->cols() - 50) / 2;

@@ -22,12 +22,9 @@ struct tui_box {
   int w, h;
   int screen_;
   std::string cache;
-  char *watch;
-  char last;
   draw_func draw;
   loop_func onhover;
   void *data1;
-  void *data2;
   tui_box() {}
 
 public:
@@ -36,10 +33,8 @@ public:
   tui_box &operator=(const tui_box &) = delete;
   ~tui_box() {}
   static std::shared_ptr<tui_box> create(int x, int y, int w, int h, int screen,
-                                         char *watch, char initial,
                                          draw_func draw, loop_func onclick,
-                                         loop_func onhover, void *data1,
-                                         void *data2);
+                                         loop_func onhover, void *data1);
 
   int screen() const { return screen_; }
 
@@ -100,9 +95,8 @@ public:
    * TODO: Find some way to
    *   strip this down.
    */
-  void add(int x, int y, int w, int h, char *watch, char initial,
-           draw_func draw, loop_func onclick, loop_func onhover, void *data1,
-           void *data2);
+  void add(int x, int y, int w, int h, draw_func draw, loop_func onclick,
+           loop_func onhover, void *data1);
 
   /*
    * HELPERS

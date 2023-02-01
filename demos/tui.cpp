@@ -20,10 +20,8 @@
  *   strip this down.
  */
 std::shared_ptr<tui_box> tui_box::create(int x, int y, int w, int h, int screen,
-                                         char *watch, char initial,
                                          draw_func draw, loop_func onclick,
-                                         loop_func onhover, void *data1,
-                                         void *data2) {
+                                         loop_func onhover, void *data1) {
 
   auto b = std::shared_ptr<tui_box>(new tui_box);
   b->x = x;
@@ -31,13 +29,13 @@ std::shared_ptr<tui_box> tui_box::create(int x, int y, int w, int h, int screen,
   b->w = w;
   b->h = h;
   b->screen_ = screen;
-  b->watch = watch;
-  b->last = initial;
+  // b->watch = watch;
+  // b->last = initial;
   b->draw = draw;
   b->onclick = onclick;
   b->onhover = onhover;
   b->data1 = data1;
-  b->data2 = data2;
+  // b->data2 = data2;
   b->cache = draw(b.get());
   return b;
 }
@@ -111,14 +109,12 @@ uint16_t tui::rows() const { return impl_->Rows(); }
  * TODO: Find some way to
  *   strip this down.
  */
-void tui::add(int x, int y, int w, int h, char *watch, char initial,
-              draw_func draw, loop_func onclick, loop_func onhover, void *data1,
-              void *data2) {
+void tui::add(int x, int y, int w, int h, draw_func draw, loop_func onclick,
+              loop_func onhover, void *data1) {
 
-  auto box =
-      tui_box::create((x == UI_CENTER_X ? this->center_x(w) : x),
-                      (y == UI_CENTER_Y ? this->center_y(h) : y), w, h, screen,
-                      watch, initial, draw, onclick, onhover, data1, data2);
+  auto box = tui_box::create((x == UI_CENTER_X ? this->center_x(w) : x),
+                             (y == UI_CENTER_Y ? this->center_y(h) : y), w, h,
+                             screen, draw, onclick, onhover, data1);
   this->b.push_back(box);
 }
 
@@ -128,7 +124,7 @@ void tui::add(int x, int y, int w, int h, char *watch, char initial,
 static std::string text(tui_box *b) { return std::string((char *)b->data1); }
 
 void tui::add_text(int x, int y, char *str, loop_func click, loop_func hover) {
-  this->add(x, y, strlen(str), 1, NULL, 0, ::text, click, hover, str, NULL);
+  this->add(x, y, strlen(str), 1, ::text, click, hover, str);
 }
 
 int tui::cursor_y(tui_box *b, int n) {
@@ -146,12 +142,13 @@ void tui::draw_one(tui_box *tmp, int flush) {
   }
 
   std::string buf;
-  if (this->force || tmp->watch == NULL || *(tmp->watch) != tmp->last) {
-    buf = tmp->draw(tmp);
-    if (tmp->watch != NULL)
-      tmp->last = *(tmp->watch);
-    tmp->cache = buf;
-  } else {
+  // if (this->force || tmp->watch == NULL || *(tmp->watch) != tmp->last) {
+  //   buf = tmp->draw(tmp);
+  //   if (tmp->watch != NULL)
+  //     tmp->last = *(tmp->watch);
+  //   tmp->cache = buf;
+  // } else
+  {
     // buf is allocated proportionally to tmp->cache, so strcpy is safe
     buf = tmp->cache;
   }
