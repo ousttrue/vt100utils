@@ -4,7 +4,7 @@ m_dep = c.find_library('m')
 executable(
     'hover',
     'hover.cpp',
-    'tuibox.cpp',
+    'tui.cpp',
     install: true,
     dependencies: vt100utils_dep,
 )
@@ -12,7 +12,7 @@ executable(
 executable(
     'overflow',
     'overflow.cpp',
-    'tuibox.cpp',
+    'tui.cpp',
     install: true,
     dependencies: vt100utils_dep,
 )
@@ -20,7 +20,7 @@ executable(
 executable(
     'words',
     'words.cpp',
-    'tuibox.cpp',
+    'tui.cpp',
     install: true,
     dependencies: [vt100utils_dep, m_dep],
 )
@@ -28,7 +28,7 @@ executable(
 executable(
     'truecolor_stresstest',
     'truecolor_stresstest.cpp',
-    'tuibox.cpp',
+    'tui.cpp',
     install: true,
     dependencies: [vt100utils_dep, m_dep],
 )

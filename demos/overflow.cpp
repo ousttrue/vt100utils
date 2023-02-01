@@ -3,11 +3,11 @@
  */
 
 #include "../vt100utils.h"
-#include "tuibox.h"
+#include "tui.h"
 
 #define MIN(a, b) (a < b ? a : b)
 
-tuibox *g_u = nullptr;
+tui *g_u = nullptr;
 struct vt100_node_t *g_head = nullptr;
 int w = 50;
 
@@ -95,7 +95,7 @@ int main(void) {
       "pariatur. \x1b[34mExcepteur sint occaecat cupidatat non proident, sunt "
       "in culpa qui officia deserunt mollit anim id est laborum.");
 
-  g_u = new tuibox(0);
+  g_u = new tui(0);
 
   g_u->on_key("\x1b[C", grow);
   g_u->on_key("\x1b[D", shrink);

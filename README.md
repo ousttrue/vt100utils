@@ -2,7 +2,7 @@
 
 A single-header C library for encoding, decoding, and doing useful things with [ANSI graphics escape sequences](https://vt100.net/docs/vt510-rm/SGR.html).
 
-This library is specifically targeted at graphics sequences because they are particularly useful for building terminal user interfaces, such as in my library [`tuibox`](https://github.com/Cubified/tuibox).
+This library is specifically targeted at graphics sequences because they are particularly useful for building terminal user interfaces, such as in my library [`tui`](https://github.com/Cubified/tui).
 
 By separating plain (visible) text from its formatting, previously-challenging tasks such as text wrapping, formatting changes, and truncation become relatively straightforward.
 

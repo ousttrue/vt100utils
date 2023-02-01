@@ -3,12 +3,12 @@
  */
 
 #include "../vt100utils.h"
-#include "tuibox.h"
+#include "tui.h"
 #include <sstream>
 
 #define MIN(a, b) (a < b ? a : b)
 
-tuibox *g_u = nullptr;
+tui *g_u = nullptr;
 struct vt100_node_t *head;
 
 std::string draw(ui_box_t *b) {
@@ -48,7 +48,7 @@ int main(void) {
       "38;5;115mevery\x1B[38;5;116mword\x1B[38;5;117mcan\x1B[38;5;118mbe\x1B["
       "38;5;119mclicked.\x1B[38;5;120mWhile\x1B[38;5;121mbehavior\x1B[38;5;"
       "122mlike\x1B[38;5;123mthis\x1B[38;5;124mis\x1B[38;5;125mpossible\x1B[38;"
-      "5;126mwith\x1B[38;5;127mstandalone\x1B[38;5;128mtuibox\x1B[38;5;129m("
+      "5;126mwith\x1B[38;5;127mstandalone\x1B[38;5;128mtui\x1B[38;5;129m("
       "or\x1B[38;5;130mother\x1B[38;5;131mlibraries),\x1B[38;5;132mit\x1B[38;5;"
       "133mwould\x1B[38;5;134mbe\x1B[38;5;135mincredibly\x1B[38;5;"
       "136mchallenging\x1B[38;5;137mand\x1B[38;5;138mcumbersome.\x1B[38;5;"
@@ -56,7 +56,7 @@ int main(void) {
       "5;143min\x1B[38;5;144mless\x1B[38;5;145mthan\x1B[38;5;146m100\x1B[38;5;"
       "147mlines\x1B[38;5;148mof\x1B[38;5;149mcode.");
 
-  g_u = new tuibox(0);
+  g_u = new tui(0);
 
   x = (g_u->cols() - 50) / 2;
   y = (g_u->rows() - 10) / 2;

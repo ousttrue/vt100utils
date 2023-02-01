@@ -1,5 +1,5 @@
 /*
- * tuibox.h: simple tui library
+ * tui.h: simple tui library
  */
 #pragma once
 #include <string>
@@ -41,7 +41,7 @@ struct tui_event {
   func f;
 };
 
-class tuibox {
+class tui {
   class ui_t_impl *impl_ = nullptr;
   std::vector<ui_box_t> b;
   std::vector<tui_event> e;
@@ -53,8 +53,8 @@ class tuibox {
   int force = 0;
 
 public:
-  tuibox(const tuibox &) = delete;
-  tuibox &operator=(const tuibox &) = delete;
+  tui(const tui &) = delete;
+  tui &operator=(const tui &) = delete;
 
   /*
    * Initializes a new UI struct,
@@ -63,14 +63,14 @@ public:
    *   necessary escape codes
    *   for mouse support.
    */
-  tuibox(int s);
+  tui(int s);
 
   /*
    * Frees the given UI struct,
    *   and takes the terminal
    *   out of raw mode.
    */
-  ~tuibox();
+  ~tui();
 
   uint16_t cols() const;
   uint16_t rows() const;
