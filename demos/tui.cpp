@@ -19,22 +19,18 @@
  * TODO: Find some way to
  *   strip this down.
  */
-std::shared_ptr<tui_box> tui_box::create(int x, int y, int w, int h, int screen,
+std::shared_ptr<tui_box> tui_box::create(const tui_rect &rect, int screen,
                                          draw_func draw, loop_func onclick,
-                                         loop_func onhover, void *data1) {
+                                         loop_func onhover) {
 
   auto b = std::shared_ptr<tui_box>(new tui_box);
-  b->x = x;
-  b->y = y;
-  b->w = w;
-  b->h = h;
+  b->rect_ = rect;
   b->screen_ = screen;
   // b->watch = watch;
   // b->last = initial;
   b->draw = draw;
   b->onclick = onclick;
   b->onhover = onhover;
-  b->data1 = data1;
   // b->data2 = data2;
   b->cache = draw(b.get());
   return b;
@@ -109,26 +105,22 @@ uint16_t tui::rows() const { return impl_->Rows(); }
  * TODO: Find some way to
  *   strip this down.
  */
-void tui::add(int x, int y, int w, int h, draw_func draw, loop_func onclick,
-              loop_func onhover, void *data1) {
+void tui::add(const tui_rect &rect, draw_func draw, loop_func onclick,
+              loop_func onhover) {
 
-  auto box = tui_box::create((x == UI_CENTER_X ? this->center_x(w) : x),
-                             (y == UI_CENTER_Y ? this->center_y(h) : y), w, h,
-                             screen, draw, onclick, onhover, data1);
+  auto box = tui_box::create(rect, screen, draw, onclick, onhover);
   this->b.push_back(box);
 }
 
-/*
- * HELPERS
- */
-static std::string text(tui_box *b) { return std::string((char *)b->data1); }
-
-void tui::add_text(int x, int y, char *str, loop_func click, loop_func hover) {
-  this->add(x, y, strlen(str), 1, ::text, click, hover, str);
+void tui::add_text(int x, int y, std::string_view str, loop_func click,
+                   loop_func hover) {
+  std::string buf(str);
+  draw_func callback = [buf](tui_box *b) { return buf; };
+  this->add({x, y, (int)str.size(), 1}, callback, click, hover);
 }
 
 int tui::cursor_y(tui_box *b, int n) {
-  return (b->y + (n + 1) + (canscroll ? scroll : 0));
+  return (b->rect_.y + (n + 1) + (canscroll ? scroll : 0));
 }
 
 /*
@@ -142,13 +134,12 @@ void tui::draw_one(tui_box *tmp, int flush) {
   }
 
   std::string buf;
-  // if (this->force || tmp->watch == NULL || *(tmp->watch) != tmp->last) {
-  //   buf = tmp->draw(tmp);
-  //   if (tmp->watch != NULL)
-  //     tmp->last = *(tmp->watch);
-  //   tmp->cache = buf;
-  // } else
-  {
+  if (this->force) {
+    buf = tmp->draw(tmp);
+    // if (tmp->watch != NULL)
+    //   tmp->last = *(tmp->watch);
+    tmp->cache = buf;
+  } else {
     // buf is allocated proportionally to tmp->cache, so strcpy is safe
     buf = tmp->cache;
   }
@@ -156,8 +147,8 @@ void tui::draw_one(tui_box *tmp, int flush) {
   auto tok = strtok((char *)buf.data(), "\n");
   int n = -1;
   while (tok) {
-    if (impl_->Contains(tmp->x, cursor_y(tmp, n))) {
-      printf("\x1b[%i;%iH%s", cursor_y(tmp, n), tmp->x, tok);
+    if (impl_->Contains(tmp->rect_.x, cursor_y(tmp, n))) {
+      printf("\x1b[%i;%iH%s", cursor_y(tmp, n), tmp->rect_.x, tok);
       n++;
     }
     tok = strtok(NULL, "\n");
@@ -225,8 +216,10 @@ void tui::update(std::string_view c) {
         int y = strtol(tok.current().data(), NULL, 10) -
                 (this->canscroll ? this->scroll : 0);
         for (auto &tmp : this->b) {
-          if (tmp->screen() == this->screen && tmp->box_contains(x, y)) {
-            tmp->onclick(tmp.get(), x, y, this->mouse);
+          if (tmp->screen() == this->screen && tmp->rect_.contains(x, y)) {
+            if (tmp->onclick) {
+              tmp->onclick(tmp.get(), x, y, this->mouse);
+            }
           }
         }
       }
@@ -240,8 +233,10 @@ void tui::update(std::string_view c) {
       int y = strtol(tok.current().data(), NULL, 10) -
               (this->canscroll ? this->scroll : 0);
       for (auto &tmp : this->b) {
-        if (tmp->screen() == this->screen && tmp->box_contains(x, y)) {
-          tmp->onhover(tmp.get(), x, y, this->mouse);
+        if (tmp->screen() == this->screen && tmp->rect_.contains(x, y)) {
+          if (tmp->onhover) {
+            tmp->onhover(tmp.get(), x, y, this->mouse);
+          }
         }
       }
     } break;
