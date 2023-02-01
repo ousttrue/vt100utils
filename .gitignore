@@ -4,3 +4,5 @@ demos/hover
 
 /builddir/
 /prefix/
+/subprojects/*
+!/subprojects/*.wrap
