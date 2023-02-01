@@ -1,4 +1,5 @@
 #include "tuibox.h"
+#include "tokenizer.h"
 #include <sstream>
 #include <stdio.h>
 #include <stdlib.h>
@@ -79,8 +80,8 @@ uint16_t tuibox::rows() const { return impl_->Rows(); }
  *   strip this down.
  */
 int tuibox::add(int x, int y, int w, int h, int screen, char *watch,
-                 char initial, draw_func draw, loop_func onclick,
-                 loop_func onhover, void *data1, void *data2) {
+                char initial, draw_func draw, loop_func onclick,
+                loop_func onhover, void *data1, void *data2) {
 
   ui_box_t b = {};
 
@@ -116,9 +117,9 @@ int tuibox::add(int x, int y, int w, int h, int screen, char *watch,
 static std::string text(ui_box_t *b) { return std::string((char *)b->data1); }
 
 int tuibox::text(int x, int y, char *str, int screen, loop_func click,
-                  loop_func hover) {
-  return this->add(x, y, strlen(str), 1, screen, NULL, 0, ::text, click,
-                      hover, str, NULL);
+                 loop_func hover) {
+  return this->add(x, y, strlen(str), 1, screen, NULL, 0, ::text, click, hover,
+                   str, NULL);
 }
 
 int tuibox::cursor_y(ui_box_t *b, int n) {
@@ -208,21 +209,19 @@ void tuibox::on_key(const char *c, func f) {
  *   opaque to the user.
  */
 void tuibox::update(char *c, int n) {
-  int x, y;
-  char cpy[n], *tok;
-
   if (n >= 4 && c[0] == '\x1b' && c[1] == '[' && c[2] == '<') {
-    strncpy(cpy, c, n);
-    tok = strtok(cpy + 3, ";");
+    Tokenizer tok(c + 3, ';');
+    tok.next();
 
-    switch (tok[0]) {
+    switch (tok.current()[0]) {
     case '0':
       this->mouse = (strchr(c, 'm') == NULL);
       if (this->mouse) {
-        tok = strtok(NULL, ";");
-        x = atoi(tok);
-        tok = strtok(NULL, ";");
-        y = strtol(tok, NULL, 10) - (this->canscroll ? this->scroll : 0);
+        tok.next();
+        int x = atoi(tok.current().data());
+        tok.next();
+        int y = strtol(tok.current().data(), NULL, 10) -
+                (this->canscroll ? this->scroll : 0);
         for (auto &tmp : this->b) {
           if (tmp.screen == this->screen && tmp.box_contains(x, y)) {
             tmp.onclick(&tmp, x, y, this->mouse);
@@ -230,21 +229,24 @@ void tuibox::update(char *c, int n) {
         }
       }
       break;
+
     case '3': {
-      this->mouse = (strcmp(tok, "32") == 0);
-      tok = strtok(NULL, ";");
-      x = atoi(tok);
-      tok = strtok(NULL, ";");
-      y = strtol(tok, NULL, 10) - (this->canscroll ? this->scroll : 0);
+      this->mouse = (strcmp(tok.current().begin(), "32") == 0);
+      tok.next();
+      int x = atoi(tok.current().data());
+      tok.next();
+      int y = strtol(tok.current().data(), NULL, 10) -
+              (this->canscroll ? this->scroll : 0);
       for (auto &tmp : this->b) {
         if (tmp.screen == this->screen && tmp.box_contains(x, y)) {
           tmp.onhover(&tmp, x, y, this->mouse);
         }
       }
     } break;
+
     case '6':
       if (this->canscroll) {
-        this->scroll += (4 * (tok[1] == '4')) - 2;
+        this->scroll += (4 * (tok.current()[1] == '4')) - 2;
         printf("\x1b[0m\x1b[2J");
         this->draw();
       }

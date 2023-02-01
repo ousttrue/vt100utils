@@ -1,14 +1,18 @@
+#include "../demos/tokenizer.h"
 #include <catch2/catch_test_macros.hpp>
 
-#include <cstdint>
+auto src = R"(abc; aga;;jkjk)";
 
-uint32_t factorial(uint32_t number) {
-  return number <= 1 ? number : factorial(number - 1) * number;
-}
+TEST_CASE("string tests", "[Tokenizer]") {
 
-TEST_CASE("Factorials are computed", "[factorial]") {
-  REQUIRE(factorial(1) == 1);
-  REQUIRE(factorial(2) == 2);
-  REQUIRE(factorial(3) == 6);
-  REQUIRE(factorial(10) == 3'628'800);
+  Tokenizer tok(src, ';');
+
+  REQUIRE(tok.next());
+  REQUIRE(tok.current() == "abc");
+  REQUIRE(tok.next());
+  REQUIRE(tok.current() == " aga");
+  REQUIRE(tok.next());
+  REQUIRE(tok.current() == "");
+  REQUIRE(tok.next());
+  REQUIRE(tok.current() == "jkjk");
 }
