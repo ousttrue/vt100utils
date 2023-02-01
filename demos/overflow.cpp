@@ -97,13 +97,13 @@ int main(void) {
 
   g_u = new tuibox(0);
 
-  g_u->ui_key("\x1b[C", grow);
-  g_u->ui_key("\x1b[D", shrink);
-  g_u->ui_key("q", stop);
+  g_u->on_key("\x1b[C", grow);
+  g_u->on_key("\x1b[D", shrink);
+  g_u->on_key("q", stop);
 
   draw();
 
-  g_u->ui_mainloop();
+  g_u->mainloop();
 
   return 0;
 }

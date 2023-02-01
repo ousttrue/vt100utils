@@ -78,7 +78,7 @@ uint16_t tuibox::rows() const { return impl_->Rows(); }
  * TODO: Find some way to
  *   strip this down.
  */
-int tuibox::ui_add(int x, int y, int w, int h, int screen, char *watch,
+int tuibox::add(int x, int y, int w, int h, int screen, char *watch,
                  char initial, draw_func draw, loop_func onclick,
                  loop_func onhover, void *data1, void *data2) {
 
@@ -86,8 +86,8 @@ int tuibox::ui_add(int x, int y, int w, int h, int screen, char *watch,
 
   b.id = this->id++;
 
-  b.x = (x == UI_CENTER_X ? this->ui_center_x(w) : x);
-  b.y = (y == UI_CENTER_Y ? this->ui_center_y(h) : y);
+  b.x = (x == UI_CENTER_X ? this->center_x(w) : x);
+  b.y = (y == UI_CENTER_Y ? this->center_y(h) : y);
   b.w = w;
   b.h = h;
 
@@ -113,15 +113,15 @@ int tuibox::ui_add(int x, int y, int w, int h, int screen, char *watch,
 /*
  * HELPERS
  */
-std::string _ui_text(ui_box_t *b) { return std::string((char *)b->data1); }
+static std::string text(ui_box_t *b) { return std::string((char *)b->data1); }
 
-int tuibox::ui_text(int x, int y, char *str, int screen, loop_func click,
+int tuibox::text(int x, int y, char *str, int screen, loop_func click,
                   loop_func hover) {
-  return this->ui_add(x, y, strlen(str), 1, screen, NULL, 0, _ui_text, click,
+  return this->add(x, y, strlen(str), 1, screen, NULL, 0, ::text, click,
                       hover, str, NULL);
 }
 
-int tuibox::CURSOR_Y(ui_box_t *b, int n) {
+int tuibox::cursor_y(ui_box_t *b, int n) {
   return (b->y + (n + 1) + (canscroll ? scroll : 0));
 }
 
@@ -129,7 +129,7 @@ int tuibox::CURSOR_Y(ui_box_t *b, int n) {
  * Draws a single box to the
  *   screen.
  */
-void tuibox::ui_draw_one(ui_box_t *tmp, int flush) {
+void tuibox::draw_one(ui_box_t *tmp, int flush) {
 
   if (tmp->screen != this->screen)
     return;
@@ -149,8 +149,8 @@ void tuibox::ui_draw_one(ui_box_t *tmp, int flush) {
   auto tok = strtok((char *)buf.data(), "\n");
   int n = -1;
   while (tok) {
-    if (impl_->Contains(tmp->x, CURSOR_Y(tmp, n))) {
-      printf("\x1b[%i;%iH%s", CURSOR_Y(tmp, n), tmp->x, tok);
+    if (impl_->Contains(tmp->x, cursor_y(tmp, n))) {
+      printf("\x1b[%i;%iH%s", cursor_y(tmp, n), tmp->x, tok);
       n++;
     }
     tok = strtok(NULL, "\n");
@@ -163,14 +163,14 @@ void tuibox::ui_draw_one(ui_box_t *tmp, int flush) {
 /*
  * Draws all boxes to the screen.
  */
-void tuibox::ui_draw() {
+void tuibox::draw() {
   ui_box_t *tmp;
   int i;
 
   printf("\x1b[0m\x1b[2J");
 
   for (auto &tmp : this->b) {
-    this->ui_draw_one(&tmp, 0);
+    this->draw_one(&tmp, 0);
   }
   fflush(stdout);
   this->force = 0;
@@ -180,16 +180,16 @@ void tuibox::ui_draw() {
  * Forces a redraw of the screen,
  *   updating all boxes' caches.
  */
-void tuibox::ui_redraw() {
+void tuibox::redraw() {
   this->force = 1;
-  ui_draw();
+  draw();
 }
 
 /*
  * Adds a new key event listener
  *   to the UI.
  */
-void tuibox::ui_key(const char *c, func f) {
+void tuibox::on_key(const char *c, func f) {
   this->e.push_back({
       .c = c,
       .f = f,
@@ -207,7 +207,7 @@ void tuibox::ui_key(const char *c, func f) {
  *   variables buf and n remain
  *   opaque to the user.
  */
-void tuibox::_ui_update(char *c, int n) {
+void tuibox::update(char *c, int n) {
   int x, y;
   char cpy[n], *tok;
 
@@ -246,7 +246,7 @@ void tuibox::_ui_update(char *c, int n) {
       if (this->canscroll) {
         this->scroll += (4 * (tok[1] == '4')) - 2;
         printf("\x1b[0m\x1b[2J");
-        this->ui_draw();
+        this->draw();
       }
       break;
     }
@@ -258,9 +258,9 @@ void tuibox::_ui_update(char *c, int n) {
   }
 }
 
-void tuibox::ui_mainloop() {
+void tuibox::mainloop() {
   char buf[64];
   while (int n = read(STDIN_FILENO, buf, sizeof(buf))) {
-    this->_ui_update(buf, n);
+    this->update(buf, n);
   }
 }

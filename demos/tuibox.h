@@ -73,8 +73,8 @@ public:
 
   uint16_t cols() const;
   uint16_t rows() const;
-  int ui_center_x(int w) const { return (cols() - w) / 2; }
-  int ui_center_y(int h) const { return (rows() - h) / 2; }
+  int center_x(int w) const { return (cols() - w) / 2; }
+  int center_y(int h) const { return (rows() - h) / 2; }
 
   /*
    * Adds a new box to the UI.
@@ -87,42 +87,42 @@ public:
    * TODO: Find some way to
    *   strip this down.
    */
-  int ui_add(int x, int y, int w, int h, int screen, char *watch, char initial,
+  int add(int x, int y, int w, int h, int screen, char *watch, char initial,
              draw_func draw, loop_func onclick, loop_func onhover, void *data1,
              void *data2);
 
   /*
    * HELPERS
    */
-  int ui_text(int x, int y, char *str, int screen, loop_func click,
+  int text(int x, int y, char *str, int screen, loop_func click,
               loop_func hover);
 
-  int CURSOR_Y(ui_box_t *b, int n);
+  int cursor_y(ui_box_t *b, int n);
 
   /*
    * Draws a single box to the
    *   screen.
    */
-  void ui_draw_one(ui_box_t *tmp, int flush);
+  void draw_one(ui_box_t *tmp, int flush);
 
   /*
    * Draws all boxes to the screen.
    */
-  void ui_draw();
+  void draw();
 
   /*
    * Forces a redraw of the screen,
    *   updating all boxes' caches.
    */
-  void ui_redraw();
+  void redraw();
 
   /*
    * Adds a new key event listener
    *   to the UI.
    */
-  void ui_key(const char *c, func f);
+  void on_key(const char *c, func f);
 
-  void ui_mainloop();
+  void mainloop();
 
 private:
   /*
@@ -136,5 +136,5 @@ private:
    *   variables buf and n remain
    *   opaque to the user.
    */
-  void _ui_update(char *c, int n);
+  void update(char *c, int n);
 };

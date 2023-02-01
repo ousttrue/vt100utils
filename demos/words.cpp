@@ -25,7 +25,7 @@ void click(ui_box_t *b, int x, int y, int) {
   node->fg.value += 10;
   if (node->fg.value > 255)
     node->fg.value = 10;
-  g_u->ui_draw();
+  g_u->draw();
 }
 
 void stop() {
@@ -63,7 +63,7 @@ int main(void) {
 
   tmp = head->next;
   while (tmp != NULL) {
-    g_u->ui_add(x, y, tmp->len, 1, 0, NULL, 0, draw, click, NULL, tmp, NULL);
+    g_u->add(x, y, tmp->len, 1, 0, NULL, 0, draw, click, NULL, tmp, NULL);
     x += tmp->len;
     if (x > (g_u->cols() + 50) / 2) {
       x = (g_u->cols() - 50) / 2;
@@ -72,10 +72,10 @@ int main(void) {
     tmp = tmp->next;
   }
 
-  g_u->ui_key("q", stop);
-  g_u->ui_draw();
+  g_u->on_key("q", stop);
+  g_u->draw();
 
-  g_u->ui_mainloop();
+  g_u->mainloop();
 
   return 0;
 }

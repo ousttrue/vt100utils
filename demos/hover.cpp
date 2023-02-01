@@ -31,7 +31,7 @@ std::string draw(ui_box_t *b) {
 void click(ui_box_t *b, int x, int y, int) {
   while (w < 50) {
     w++;
-    g_u->ui_draw();
+    g_u->draw();
     usleep(10000);
   }
 }
@@ -42,7 +42,7 @@ void hover(ui_box_t *b, int x, int y, int down) {
   } else {
     while (w > 12) {
       w--;
-      g_u->ui_draw();
+      g_u->draw();
       usleep(10000);
     }
   }
@@ -63,14 +63,14 @@ int main(void) {
 
   g_u = new tuibox(0);
 
-  g_u->ui_add(UI_CENTER_X, UI_CENTER_Y, 35, 1, 0, NULL, 0, draw, click, hover,
+  g_u->add(UI_CENTER_X, UI_CENTER_Y, 35, 1, 0, NULL, 0, draw, click, hover,
            NULL, NULL);
 
-  g_u->ui_key("q", stop);
+  g_u->on_key("q", stop);
 
-  g_u->ui_draw();
+  g_u->draw();
 
-  g_u->ui_mainloop();
+  g_u->mainloop();
 
   return 0;
 }
