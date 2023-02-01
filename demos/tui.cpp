@@ -116,7 +116,7 @@ int tui::add(int x, int y, int w, int h, int screen, char *watch,
  */
 static std::string text(ui_box_t *b) { return std::string((char *)b->data1); }
 
-int tui::text(int x, int y, char *str, int screen, loop_func click,
+int tui::add_text(int x, int y, char *str, int screen, loop_func click,
                  loop_func hover) {
   return this->add(x, y, strlen(str), 1, screen, NULL, 0, ::text, click, hover,
                    str, NULL);

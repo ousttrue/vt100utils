@@ -95,7 +95,7 @@ public:
   /*
    * HELPERS
    */
-  int text(int x, int y, char *str, int screen, loop_func click,
+  int add_text(int x, int y, char *str, int screen, loop_func click,
               loop_func hover);
 
   int cursor_y(ui_box_t *b, int n);
