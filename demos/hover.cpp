@@ -13,7 +13,7 @@ tui *g_u = nullptr;
 struct vt100_node_t *head;
 int w = 12;
 
-std::string draw(ui_box_t *b) {
+std::string draw(tui_box *b) {
   struct vt100_node_t *tmp = head->next;
   char *sgr;
   int len = 0;
@@ -28,7 +28,7 @@ std::string draw(ui_box_t *b) {
   return ss.str();
 }
 
-void click(ui_box_t *b, int x, int y, int) {
+void click(tui_box *b, int x, int y, int) {
   while (w < 50) {
     w++;
     g_u->draw();
@@ -36,7 +36,7 @@ void click(ui_box_t *b, int x, int y, int) {
   }
 }
 
-void hover(ui_box_t *b, int x, int y, int down) {
+void hover(tui_box *b, int x, int y, int down) {
   if (down) {
     click(b, x, y, {});
   } else {
@@ -63,7 +63,7 @@ int main(void) {
 
   g_u = new tui(0);
 
-  g_u->add(UI_CENTER_X, UI_CENTER_Y, 35, 1, 0, NULL, 0, draw, click, hover,
+  g_u->add(UI_CENTER_X, UI_CENTER_Y, 35, 1, NULL, 0, draw, click, hover,
            NULL, NULL);
 
   g_u->on_key("q", stop);

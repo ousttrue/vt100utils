@@ -8,7 +8,39 @@
 #include <termios.h>
 #include <unistd.h>
 
-#define MAXCACHESIZE 65535
+/*
+ * Adds a new box to the UI.
+ *
+ * This function is very simple in
+ *   nature, but the variety of
+ *   properties associated with
+ *   an individual box makes it
+ *   intimidating to look at.
+ * TODO: Find some way to
+ *   strip this down.
+ */
+std::shared_ptr<tui_box> tui_box::create(int x, int y, int w, int h, int screen,
+                                         char *watch, char initial,
+                                         draw_func draw, loop_func onclick,
+                                         loop_func onhover, void *data1,
+                                         void *data2) {
+
+  auto b = std::shared_ptr<tui_box>(new tui_box);
+  b->x = x;
+  b->y = y;
+  b->w = w;
+  b->h = h;
+  b->screen_ = screen;
+  b->watch = watch;
+  b->last = initial;
+  b->draw = draw;
+  b->onclick = onclick;
+  b->onhover = onhover;
+  b->data1 = data1;
+  b->data2 = data2;
+  b->cache = draw(b.get());
+  return b;
+}
 
 class ui_t_impl {
   struct termios tio;
@@ -79,46 +111,27 @@ uint16_t tui::rows() const { return impl_->Rows(); }
  * TODO: Find some way to
  *   strip this down.
  */
-void tui::add(int x, int y, int w, int h, int screen, char *watch,
-                char initial, draw_func draw, loop_func onclick,
-                loop_func onhover, void *data1, void *data2) {
+void tui::add(int x, int y, int w, int h, char *watch, char initial,
+              draw_func draw, loop_func onclick, loop_func onhover, void *data1,
+              void *data2) {
 
-  ui_box_t b = {};
-
-  b.x = (x == UI_CENTER_X ? this->center_x(w) : x);
-  b.y = (y == UI_CENTER_Y ? this->center_y(h) : y);
-  b.w = w;
-  b.h = h;
-
-  b.screen = this->screen;
-
-  b.watch = watch;
-  b.last = initial;
-
-  b.draw = draw;
-  b.onclick = onclick;
-  b.onhover = onhover;
-
-  b.data1 = data1;
-  b.data2 = data2;
-
-  b.cache = draw(&b);
-
-  this->b.push_back(b);
+  auto box =
+      tui_box::create((x == UI_CENTER_X ? this->center_x(w) : x),
+                      (y == UI_CENTER_Y ? this->center_y(h) : y), w, h, screen,
+                      watch, initial, draw, onclick, onhover, data1, data2);
+  this->b.push_back(box);
 }
 
 /*
  * HELPERS
  */
-static std::string text(ui_box_t *b) { return std::string((char *)b->data1); }
+static std::string text(tui_box *b) { return std::string((char *)b->data1); }
 
-void tui::add_text(int x, int y, char *str, int screen, loop_func click,
-                 loop_func hover) {
-  this->add(x, y, strlen(str), 1, screen, NULL, 0, ::text, click, hover,
-                   str, NULL);
+void tui::add_text(int x, int y, char *str, loop_func click, loop_func hover) {
+  this->add(x, y, strlen(str), 1, NULL, 0, ::text, click, hover, str, NULL);
 }
 
-int tui::cursor_y(ui_box_t *b, int n) {
+int tui::cursor_y(tui_box *b, int n) {
   return (b->y + (n + 1) + (canscroll ? scroll : 0));
 }
 
@@ -126,12 +139,12 @@ int tui::cursor_y(ui_box_t *b, int n) {
  * Draws a single box to the
  *   screen.
  */
-void tui::draw_one(ui_box_t *tmp, int flush) {
+void tui::draw_one(tui_box *tmp, int flush) {
 
-  if (tmp->screen != this->screen)
+  if (tmp->screen() != this->screen) {
     return;
+  }
 
-  // buf = (char *)calloc(1, strlen(tmp->cache) * 2);
   std::string buf;
   if (this->force || tmp->watch == NULL || *(tmp->watch) != tmp->last) {
     buf = tmp->draw(tmp);
@@ -139,7 +152,7 @@ void tui::draw_one(ui_box_t *tmp, int flush) {
       tmp->last = *(tmp->watch);
     tmp->cache = buf;
   } else {
-    /* buf is allocated proportionally to tmp->cache, so strcpy is safe */
+    // buf is allocated proportionally to tmp->cache, so strcpy is safe
     buf = tmp->cache;
   }
 
@@ -163,7 +176,7 @@ void tui::draw_one(ui_box_t *tmp, int flush) {
 void tui::draw() {
   printf("\x1b[0m\x1b[2J");
   for (auto &tmp : this->b) {
-    this->draw_one(&tmp, 0);
+    this->draw_one(tmp.get(), 0);
   }
   fflush(stdout);
   this->force = 0;
@@ -215,8 +228,8 @@ void tui::update(std::string_view c) {
         int y = strtol(tok.current().data(), NULL, 10) -
                 (this->canscroll ? this->scroll : 0);
         for (auto &tmp : this->b) {
-          if (tmp.screen == this->screen && tmp.box_contains(x, y)) {
-            tmp.onclick(&tmp, x, y, this->mouse);
+          if (tmp->screen() == this->screen && tmp->box_contains(x, y)) {
+            tmp->onclick(tmp.get(), x, y, this->mouse);
           }
         }
       }
@@ -230,8 +243,8 @@ void tui::update(std::string_view c) {
       int y = strtol(tok.current().data(), NULL, 10) -
               (this->canscroll ? this->scroll : 0);
       for (auto &tmp : this->b) {
-        if (tmp.screen == this->screen && tmp.box_contains(x, y)) {
-          tmp.onhover(&tmp, x, y, this->mouse);
+        if (tmp->screen() == this->screen && tmp->box_contains(x, y)) {
+          tmp->onhover(tmp.get(), x, y, this->mouse);
         }
       }
     } break;

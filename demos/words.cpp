@@ -11,7 +11,7 @@
 tui *g_u = nullptr;
 struct vt100_node_t *head;
 
-std::string draw(ui_box_t *b) {
+std::string draw(tui_box *b) {
   struct vt100_node_t *node = (struct vt100_node_t *)b->data1;
   char *sgr = vt100_sgr(node, NULL);
   std::stringstream ss;
@@ -20,7 +20,7 @@ std::string draw(ui_box_t *b) {
   return ss.str();
 }
 
-void click(ui_box_t *b, int x, int y, int) {
+void click(tui_box *b, int x, int y, int) {
   struct vt100_node_t *node = (struct vt100_node_t *)b->data1;
   node->fg.value += 10;
   if (node->fg.value > 255)
@@ -63,7 +63,7 @@ int main(void) {
 
   tmp = head->next;
   while (tmp != NULL) {
-    g_u->add(x, y, tmp->len, 1, 0, NULL, 0, draw, click, NULL, tmp, NULL);
+    g_u->add(x, y, tmp->len, 1, NULL, 0, draw, click, NULL, tmp, NULL);
     x += tmp->len;
     if (x > (g_u->cols() + 50) / 2) {
       x = (g_u->cols() - 50) / 2;
