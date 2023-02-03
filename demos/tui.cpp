@@ -174,9 +174,10 @@ public:
 
   uint16_t Rows() const { return ws.ws_row; }
 
+  char buf[64];
   std::optional<std::string_view> Read() {
-    char buf[64];
-    read(STDIN_FILENO, buf, sizeof(buf))
+    auto n = read(STDIN_FILENO, buf, sizeof(buf));
+    return std::string_view(buf, buf + n);
   }
 };
 #endif
