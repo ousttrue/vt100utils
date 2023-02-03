@@ -183,24 +183,60 @@ inline const char *vt100_parse(struct vt100_node_t *node, const char *str) {
             node->mode = 0;
             break;
           /* Formatting (bold, dim, italic, etc.) */
-          case 1 ... 9: /* GCC case range extension (supported by Clang) */
+          case 1:
+          case 2:
+          case 3:
+          case 4:
+          case 5:
+          case 6:
+          case 7:
+          case 8:
+          case 9:
             node->mode |= (1 << (args[j] - 1));
             break;
           /* 8-color standard palette */
-          case 30 ... 37:
+          case 30:
+          case 31:
+          case 32:
+          case 33:
+          case 34:
+          case 35:
+          case 36:
+          case 37:
             node->fg.type = palette_8;
             node->fg.value = args[j] - 30;
             break;
-          case 40 ... 47:
+          case 40:
+          case 41:
+          case 42:
+          case 43:
+          case 44:
+          case 45:
+          case 46:
+          case 47:
             node->bg.type = palette_8;
             node->bg.value = args[j] - 40;
             break;
           /* 8-color bright palette */
-          case 90 ... 97:
+          case 90:
+          case 91:
+          case 92:
+          case 93:
+          case 94:
+          case 95:
+          case 96:
+          case 97:
             node->fg.type = palette_8_bright;
             node->fg.value = args[j] - 90;
             break;
-          case 100 ... 107:
+          case 100:
+          case 101:
+          case 102:
+          case 103:
+          case 104:
+          case 105:
+          case 106:
+          case 107:
             node->bg.type = palette_8_bright;
             node->bg.value = args[j] - 100;
             break;

@@ -5,7 +5,10 @@
 #include "../vt100utils.h"
 #include "tui.h"
 #include <sstream>
+#if _WIN32
+#else
 #include <unistd.h>
+#endif
 
 #define MIN(a, b) (a < b ? a : b)
 

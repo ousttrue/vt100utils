@@ -1,12 +1,11 @@
 #include "tui.h"
 #include "tokenizer.h"
+#include <optional>
 #include <sstream>
+#include <stdexcept>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/ioctl.h>
-#include <termios.h>
-#include <unistd.h>
 
 /*
  * Adds a new box to the UI.
@@ -35,6 +34,115 @@ std::shared_ptr<tui_box> tui_box::create(const tui_rect &rect, int screen,
   b->cache = draw(b.get());
   return b;
 }
+
+#if _WIN32
+#include <Windows.h>
+
+class ui_t_impl {
+  HANDLE hStdin_ = nullptr;
+  DWORD fdwSaveOldMode_ = {};
+  uint16_t cols_ = 0;
+  uint16_t rows_ = 0;
+
+public:
+  ui_t_impl() {
+    // Get the standard input handle.
+    hStdin_ = GetStdHandle(STD_INPUT_HANDLE);
+    if (hStdin_ == INVALID_HANDLE_VALUE) {
+      throw std::runtime_error("GetStdHandle");
+    }
+
+    // Save the current input mode, to be restored on exit.
+    if (!GetConsoleMode(hStdin_, &fdwSaveOldMode_)) {
+      throw std::runtime_error("GetConsoleMode");
+    }
+
+    // Enable the window and mouse input events.
+    auto fdwMode = ENABLE_WINDOW_INPUT | ENABLE_MOUSE_INPUT |
+                   ENABLE_VIRTUAL_TERMINAL_INPUT;
+    if (!SetConsoleMode(hStdin_, fdwMode)) {
+      throw std::runtime_error("SetConsoleMode");
+    }
+
+    CONSOLE_SCREEN_BUFFER_INFO info;
+
+    if (!GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &info)) {
+      throw std::runtime_error("GetConsoleScreenBufferInfo");
+    }
+    cols_ = info.dwSize.X;
+    rows_ = info.dwSize.Y;
+  }
+
+  ~ui_t_impl() {
+    // Restore input mode on exit.
+    SetConsoleMode(hStdin_, fdwSaveOldMode_);
+  }
+  bool Contains(int x, int y) const {
+    return false;
+    return x > 0 && x < this->Cols() && y > 0 && y < this->Rows();
+  }
+  uint16_t Cols() const { return cols_; }
+  uint16_t Rows() const { return rows_; }
+
+  std::string str_;
+
+  std::optional<std::string_view> Read() {
+    str_.clear();
+    INPUT_RECORD irInBuf[128];
+    DWORD cNumRead = 0;
+
+    // use cache
+    // Wait for the events.
+    if (!ReadConsoleInput(hStdin_,      // input buffer handle
+                          irInBuf,      // buffer to read into
+                          128,          // size of read buffer
+                          &cNumRead)) { // number of records read
+      throw std::runtime_error("ReadConsoleInput");
+    }
+
+    for (int i = 0; i < cNumRead; ++i) {
+      auto &ir = irInBuf[i];
+
+      // Dispatch the events to the appropriate handler.
+      switch (ir.EventType) {
+      case KEY_EVENT: // keyboard input
+      {
+        KEY_EVENT_RECORD &key = ir.Event.KeyEvent;
+        if (key.bKeyDown) {
+          if (key.uChar.AsciiChar) {
+            str_.push_back(key.uChar.AsciiChar);
+          }
+        }
+        // KeyEventProc(irInBuf[i].Event.KeyEvent);
+      } break;
+
+      case MOUSE_EVENT: // mouse input
+      {
+        // MouseEventProc(irInBuf[i].Event.MouseEvent);
+      } break;
+
+      case WINDOW_BUFFER_SIZE_EVENT: // scrn buf. resizing
+      {
+        // ResizeEventProc(irInBuf[i].Event.WindowBufferSizeEvent);
+      } break;
+
+      case FOCUS_EVENT: // disregard focus events
+      case MENU_EVENT:  // disregard menu events
+        break;
+
+      default:
+        throw std::runtime_error("Unknown event type");
+        break;
+      }
+    }
+
+    return str_;
+  }
+};
+#else
+#include <sys/ioctl.h>
+#include <termios.h>
+#include <unistd.h>
 
 class ui_t_impl {
   struct termios tio;
@@ -65,7 +173,13 @@ public:
   uint16_t Cols() const { return ws.ws_col; }
 
   uint16_t Rows() const { return ws.ws_row; }
+
+  std::optional<std::string_view> Read() {
+    char buf[64];
+    read(STDIN_FILENO, buf, sizeof(buf))
+  }
 };
+#endif
 
 /*
  * Initializes a new UI struct,
@@ -226,7 +340,7 @@ void tui::update(std::string_view c) {
       break;
 
     case '3': {
-      this->mouse = (strcmp(tok.current().begin(), "32") == 0);
+      this->mouse = tok.current() == "32";
       tok.next();
       int x = atoi(tok.current().data());
       tok.next();
@@ -259,8 +373,7 @@ void tui::update(std::string_view c) {
 }
 
 void tui::mainloop() {
-  char buf[64];
-  while (int n = read(STDIN_FILENO, buf, sizeof(buf))) {
-    this->update(std::string_view(buf, n));
+  while (auto buf = impl_->Read()) {
+    this->update(*buf);
   }
 }

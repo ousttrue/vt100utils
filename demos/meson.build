@@ -1,20 +1,24 @@
 c = meson.get_compiler('c')
-m_dep = c.find_library('m')
 
-executable(
-    'hover',
-    'hover.cpp',
-    'tui.cpp',
-    install: true,
-    dependencies: vt100utils_dep,
-)
+deps = [vt100utils_dep]
+if host_machine.system() != 'windows'
+    deps += c.find_library('m')
+endif
+
+# executable(
+#     'hover',
+#     'hover.cpp',
+#     'tui.cpp',
+#     install: true,
+#     dependencies: deps,
+# )
 
 executable(
     'overflow',
     'overflow.cpp',
     'tui.cpp',
     install: true,
-    dependencies: vt100utils_dep,
+    dependencies: deps,
 )
 
 executable(
@@ -22,13 +26,13 @@ executable(
     'words.cpp',
     'tui.cpp',
     install: true,
-    dependencies: [vt100utils_dep, m_dep],
+    dependencies: deps,
 )
 
-executable(
-    'truecolor_stresstest',
-    'truecolor_stresstest.cpp',
-    'tui.cpp',
-    install: true,
-    dependencies: [vt100utils_dep, m_dep],
-)
+# executable(
+#     'truecolor_stresstest',
+#     'truecolor_stresstest.cpp',
+#     'tui.cpp',
+#     install: true,
+#     dependencies: deps,
+# )

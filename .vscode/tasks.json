@@ -6,13 +6,13 @@
         {
             "label": "configure",
             "type": "shell",
-            "command": "meson setup builddir --prefix ${workspaceFolder}/prefix --native-file clang.ini",
+            "command": "meson setup builddir --prefix ${workspaceFolder}/prefix",
             "problemMatcher": [],
         },
         {
             "label": "configure(wipe)",
             "type": "shell",
-            "command": "meson setup --wipe builddir --prefix ${workspaceFolder}/prefix --native-file clang.ini",
+            "command": "meson setup --wipe builddir --prefix ${workspaceFolder}/prefix",
             "problemMatcher": [],
         },
         {
