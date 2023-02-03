@@ -53,13 +53,13 @@ struct tui_event {
 
 class tui {
   class ui_t_impl *impl_ = nullptr;
-  std::vector<std::shared_ptr<tui_box>> b;
-  std::vector<tui_event> e;
-  bool mouse = false;
-  int screen;
-  int scroll = 0;
-  bool canscroll = true;
-  int force = 0;
+  std::vector<std::shared_ptr<tui_box>> boxes_;
+  std::vector<tui_event> events_;
+  bool mouse_ = false;
+  int screen_;
+  int scroll_ = 0;
+  bool canscroll_ = true;
+  int force_ = 0;
 
 public:
   tui(const tui &) = delete;

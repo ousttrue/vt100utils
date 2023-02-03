@@ -188,7 +188,7 @@ public:
  *   necessary escape codes
  *   for mouse support.
  */
-tui::tui(int s) : impl_(new ui_t_impl), screen(s) {}
+tui::tui(int s) : impl_(new ui_t_impl), screen_(s) {}
 
 /*
  * Frees the given UI struct,
@@ -222,8 +222,8 @@ uint16_t tui::rows() const { return impl_->Rows(); }
 void tui::add(const tui_rect &rect, draw_func draw, loop_func onclick,
               loop_func onhover) {
 
-  auto box = tui_box::create(rect, screen, draw, onclick, onhover);
-  this->b.push_back(box);
+  auto box = tui_box::create(rect, screen_, draw, onclick, onhover);
+  this->boxes_.push_back(box);
 }
 
 void tui::add_text(int x, int y, std::string_view str, loop_func click,
@@ -234,7 +234,7 @@ void tui::add_text(int x, int y, std::string_view str, loop_func click,
 }
 
 int tui::cursor_y(tui_box *b, int n) {
-  return (b->rect_.y + (n + 1) + (canscroll ? scroll : 0));
+  return (b->rect_.y + (n + 1) + (canscroll_ ? scroll_ : 0));
 }
 
 /*
@@ -243,12 +243,12 @@ int tui::cursor_y(tui_box *b, int n) {
  */
 void tui::draw_one(tui_box *tmp, int flush) {
 
-  if (tmp->screen() != this->screen) {
+  if (tmp->screen() != this->screen_) {
     return;
   }
 
   std::string buf;
-  if (this->force) {
+  if (this->force_) {
     buf = tmp->draw(tmp);
     // if (tmp->watch != NULL)
     //   tmp->last = *(tmp->watch);
@@ -277,11 +277,11 @@ void tui::draw_one(tui_box *tmp, int flush) {
  */
 void tui::draw() {
   printf("\x1b[0m\x1b[2J");
-  for (auto &tmp : this->b) {
+  for (auto &tmp : this->boxes_) {
     this->draw_one(tmp.get(), 0);
   }
   fflush(stdout);
-  this->force = 0;
+  this->force_ = 0;
 }
 
 /*
@@ -289,7 +289,7 @@ void tui::draw() {
  *   updating all boxes' caches.
  */
 void tui::redraw() {
-  this->force = 1;
+  this->force_ = 1;
   draw();
 }
 
@@ -298,7 +298,7 @@ void tui::redraw() {
  *   to the UI.
  */
 void tui::on_key(const char *c, func f) {
-  this->e.push_back({
+  this->events_.push_back({
       .c = c,
       .f = f,
   });
@@ -322,17 +322,17 @@ void tui::update(std::string_view c) {
 
     switch (tok.current()[0]) {
     case '0':
-      this->mouse = (c.find('m') != std::string_view::npos);
-      if (this->mouse) {
+      this->mouse_ = (c.find('m') != std::string_view::npos);
+      if (this->mouse_) {
         tok.next();
         int x = atoi(tok.current().data());
         tok.next();
         int y = strtol(tok.current().data(), NULL, 10) -
-                (this->canscroll ? this->scroll : 0);
-        for (auto &tmp : this->b) {
-          if (tmp->screen() == this->screen && tmp->rect_.contains(x, y)) {
+                (this->canscroll_ ? this->scroll_ : 0);
+        for (auto &tmp : this->boxes_) {
+          if (tmp->screen() == this->screen_ && tmp->rect_.contains(x, y)) {
             if (tmp->onclick) {
-              tmp->onclick(tmp.get(), x, y, this->mouse);
+              tmp->onclick(tmp.get(), x, y, this->mouse_);
             }
           }
         }
@@ -340,24 +340,24 @@ void tui::update(std::string_view c) {
       break;
 
     case '3': {
-      this->mouse = tok.current() == "32";
+      this->mouse_ = tok.current() == "32";
       tok.next();
       int x = atoi(tok.current().data());
       tok.next();
       int y = strtol(tok.current().data(), NULL, 10) -
-              (this->canscroll ? this->scroll : 0);
-      for (auto &tmp : this->b) {
-        if (tmp->screen() == this->screen && tmp->rect_.contains(x, y)) {
+              (this->canscroll_ ? this->scroll_ : 0);
+      for (auto &tmp : this->boxes_) {
+        if (tmp->screen() == this->screen_ && tmp->rect_.contains(x, y)) {
           if (tmp->onhover) {
-            tmp->onhover(tmp.get(), x, y, this->mouse);
+            tmp->onhover(tmp.get(), x, y, this->mouse_);
           }
         }
       }
     } break;
 
     case '6':
-      if (this->canscroll) {
-        this->scroll += (4 * (tok.current()[1] == '4')) - 2;
+      if (this->canscroll_) {
+        this->scroll_ += (4 * (tok.current()[1] == '4')) - 2;
         printf("\x1b[0m\x1b[2J");
         this->draw();
       }
@@ -365,7 +365,7 @@ void tui::update(std::string_view c) {
     }
   }
 
-  for (auto &evt : this->e) {
+  for (auto &evt : this->events_) {
     if (c.starts_with(evt.c)) {
       evt.f();
     }
